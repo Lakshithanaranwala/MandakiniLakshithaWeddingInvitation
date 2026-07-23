@@ -34,6 +34,12 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [copied,  setCopied]  = useState<string | null>(null);
 
+  // Hard reset
+  const [resetOpen,     setResetOpen]     = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetError,    setResetError]    = useState('');
+  const [resetting,     setResetting]     = useState(false);
+
   // Add guest form state
   const [newName,  setNewName]  = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -71,6 +77,22 @@ export function AdminDashboard() {
   async function deleteGuest(id: string, name: string) {
     if (!confirm(`Remove ${name} from the guest list?`)) return;
     await supabase.from('guests').delete().eq('id', id);
+    load();
+  }
+
+  async function hardReset() {
+    const validPass = import.meta.env.VITE_ADMIN_PASSWORD;
+    if (resetPassword !== validPass) {
+      setResetError('Incorrect password.');
+      return;
+    }
+    setResetting(true);
+    await supabase.from('rsvps').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('guests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    setResetting(false);
+    setResetOpen(false);
+    setResetPassword('');
+    setResetError('');
     load();
   }
 
@@ -112,21 +134,38 @@ export function AdminDashboard() {
             Wedding Admin
           </p>
         </div>
-        <button onClick={handleLogout} style={{
-          fontFamily: 'var(--font-ui)',
-          fontSize: '0.68rem',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          background: 'rgba(255,255,255,0.1)',
-          color: 'rgba(255,255,255,0.85)',
-          border: '1px solid rgba(255,255,255,0.18)',
-          borderRadius: '8px',
-          padding: '0.45rem 0.9rem',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-        }}>
-          Sign out
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => { setResetOpen(true); setResetPassword(''); setResetError(''); }} style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: '0.68rem',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            background: 'rgba(220,53,53,0.18)',
+            color: '#ff8a80',
+            border: '1px solid rgba(220,53,53,0.35)',
+            borderRadius: '8px',
+            padding: '0.45rem 0.9rem',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}>
+            Hard reset
+          </button>
+          <button onClick={handleLogout} style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: '0.68rem',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            background: 'rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.85)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            borderRadius: '8px',
+            padding: '0.45rem 0.9rem',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       <main style={{ maxWidth: '960px', margin: '0 auto', padding: '1.5rem 1rem 5rem' }}>
@@ -330,6 +369,107 @@ export function AdminDashboard() {
         </section>
 
       </main>
+
+      {/* ── Hard Reset Modal ── */}
+      {resetOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 999,
+          padding: '1.5rem',
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '18px',
+            padding: '2rem',
+            width: '100%',
+            maxWidth: '380px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            <h2 style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '1rem',
+              fontWeight: 600,
+              color: '#b71c1c',
+              margin: '0 0 0.5rem',
+            }}>
+              Hard Reset
+            </h2>
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '0.85rem',
+              color: '#666',
+              margin: '0 0 1.5rem',
+              lineHeight: 1.5,
+            }}>
+              This will permanently delete <strong>all guests and RSVP responses</strong>. This cannot be undone. Enter your password to confirm.
+            </p>
+
+            <label style={labelStyle}>Password</label>
+            <input
+              type="password"
+              value={resetPassword}
+              onChange={(e) => { setResetPassword(e.target.value); setResetError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && hardReset()}
+              autoFocus
+              placeholder="Enter your password"
+              style={{ ...inputStyle, marginBottom: '0.75rem' }}
+            />
+
+            {resetError && (
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#b71c1c', margin: '0 0 0.75rem' }}>
+                {resetError}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => { setResetOpen(false); setResetPassword(''); setResetError(''); }}
+                style={{
+                  flex: 1,
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '0.78rem',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  background: '#f0ece6',
+                  color: '#555',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '0.75rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={hardReset}
+                disabled={resetting}
+                style={{
+                  flex: 1,
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  background: '#b71c1c',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '0.75rem',
+                  cursor: resetting ? 'not-allowed' : 'pointer',
+                  opacity: resetting ? 0.7 : 1,
+                }}
+              >
+                {resetting ? 'Deleting…' : 'Delete all'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
