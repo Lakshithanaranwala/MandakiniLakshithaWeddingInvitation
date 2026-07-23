@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { FullPageSlider, SliderProgressRail } from './components/FullPageSlider';
 import { Splash }      from './components/sections/Splash';
 import { SaveTheDate } from './components/sections/SaveTheDate';
 import { Invitation }  from './components/sections/Invitation';
@@ -11,21 +10,15 @@ export default function App() {
   const [rsvpOpen, setRsvpOpen] = useState(false);
 
   return (
-    <FullPageSlider
-      overlay={
-        <>
-          <SliderProgressRail />
-          <RsvpDock onOpen={() => setRsvpOpen(true)} />
-          <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
-        </>
-      }
-    >
-      {[
-        <Splash      key="splash"     />,
-        <SaveTheDate key="std"        />,
-        <Invitation  key="invitation" />,
-        <Details     key="details"    />,
-      ]}
-    </FullPageSlider>
+    <>
+      <main>
+        <Splash />
+        <SaveTheDate />
+        <Invitation />
+        <Details />
+      </main>
+      <RsvpDock onOpen={() => setRsvpOpen(true)} />
+      <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
+    </>
   );
 }

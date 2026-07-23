@@ -1,41 +1,27 @@
-import { motion, AnimatePresence } from 'motion/react';
 import { GlassPanel } from '../glass/GlassPanel';
-import { useSlider } from '../FullPageSlider';
 
 interface RsvpDockProps {
   onOpen: () => void;
 }
 
 export function RsvpDock({ onOpen }: RsvpDockProps) {
-  const { currentIndex } = useSlider();
-  const visible = currentIndex > 0;
-
   return (
-    <AnimatePresence>
-      {visible && (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 16 }}
-      transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+    <div
       style={{
         position: 'fixed',
-        // calc() properly stacks spacing on top of the safe area inset
         bottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))',
         left: '50%',
-        x: '-50%',
+        transform: 'translateX(-50%)',
         width: '88%',
         maxWidth: '400px',
         zIndex: 200,
       }}
     >
       <GlassPanel variant="gold" radius="pill" style={{ padding: 0 }}>
-        <motion.button
+        <button
           type="button"
           onClick={onOpen}
           aria-label="Open RSVP form"
-          whileTap={{ scale: 0.97 }}
-          transition={{ duration: 0.12, ease: 'easeInOut' }}
           style={{
             width: '100%',
             background: 'none',
@@ -63,10 +49,8 @@ export function RsvpDock({ onOpen }: RsvpDockProps) {
             />
           </svg>
           RSVP now
-        </motion.button>
+        </button>
       </GlassPanel>
-    </motion.div>
-      )}
-    </AnimatePresence>
+    </div>
   );
 }
