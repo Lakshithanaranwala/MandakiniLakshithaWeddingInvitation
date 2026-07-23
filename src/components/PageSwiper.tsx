@@ -19,9 +19,11 @@ export function useSwiper(): SwiperCtx { return useContext(SwiperContext); }
 export function PageSwiper({
   children,
   overlay,
+  disabled = false,
 }: {
   children: React.ReactNode[];
   overlay?: React.ReactNode;
+  disabled?: boolean;
 }) {
   const total   = children.length;
   const lastIdx = total - 1;
@@ -131,6 +133,7 @@ export function PageSwiper({
     // ── Touch ──────────────────────────────────────────────────────────────
 
     function onTouchStart(e: TouchEvent) {
+      if (disabled) return;
       // If on last page and it's scrolled down, let the section handle scroll
       if (
         currentRef.current === lastIdx &&
@@ -150,7 +153,7 @@ export function PageSwiper({
 
     // ── Mouse ──────────────────────────────────────────────────────────────
 
-    function onMouseDown(e: MouseEvent) { onStart(e.clientY); }
+    function onMouseDown(e: MouseEvent) { if (disabled) return; onStart(e.clientY); }
     function onMouseMove(e: MouseEvent) { if (dragging.current) onMove(e.clientY); }
     function onMouseUp()  { if (dragging.current) onEnd(); }
 
@@ -184,7 +187,7 @@ export function PageSwiper({
       window.removeEventListener('mouseup',    onMouseUp);
       window.removeEventListener('keydown',    onKeyDown);
     };
-  }, [total, lastIdx]);
+  }, [total, lastIdx, disabled]);
 
   return (
     <SwiperContext.Provider value={{ currentIndex, total }}>

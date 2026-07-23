@@ -12,6 +12,7 @@ export default function App() {
 
   return (
     <PageSwiper
+      disabled={rsvpOpen}
       overlay={
         <>
           <RsvpDock onOpen={() => setRsvpOpen(true)} />
