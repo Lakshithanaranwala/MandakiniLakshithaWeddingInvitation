@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+@theme {
+  /* Palette */
+  --color-forest-900: #16271F;
+  --color-forest-700: #1F3A32;
+  --color-forest-500: #2E5248;
+  --color-sage-400:   #8AA396;
+  --color-gold-500:   #A98B4E;
+  --color-clay-400:   #B08968;
+  --color-sand-200:   #E8DFD3;
+  --color-cream-50:   #FAF7F2;
+  --color-ink-900:    #23201C;
+
+  /* Typography */
+  --font-display: "Cormorant Garamond", serif;
+  --font-script:  "Parisienne", cursive;
+  --font-ui:      "Jost", system-ui, sans-serif;
+
+  /* Easing */
+  --ease-glass: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-cream-50);
+  color: var(--color-ink-900);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─── Glass primitive ────────────────────────────────────────────────────── */
+
+.glass {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 12px 40px -8px rgba(22, 39, 31, 0.22);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+}
+
+.glass--light  { background: rgba(250, 247, 242, 0.55); }
+.glass--dark   { background: rgba(31, 58, 50, 0.38); }
+.glass--gold   { background: rgba(169, 139, 78, 0.22); }
+.glass--panel  { border-radius: 28px; }
+.glass--pill   { border-radius: 9999px; }
+
+/* Backdrop-filter not supported (old Android WebView ~5% of Sri Lanka traffic) */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(250, 247, 242, 0.92) !important;
+  }
+}
+
+/* ─── Focus ring ────────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-500);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ─── Specular sweep keyframe ────────────────────────────────────────────── */
+
+@keyframes specular-sweep {
+  from { transform: translateX(-140%) skewX(-20deg); }
+  to   { transform: translateX(240%)  skewX(-20deg); }
+}
+
+.glass-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+  transform: translateX(-140%) skewX(-20deg);
+}
+
+.glass-sweep--playing {
+  animation: specular-sweep 1.4s var(--ease-glass) forwards;
+}
+
+/* ─── Countdown digit flip ───────────────────────────────────────────────── */
+
+.digit-enter {
+  opacity: 0;
+  transform: translateY(100%);
+}
+.digit-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 320ms, transform 320ms var(--ease-glass);
+}
+.digit-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.digit-exit-active {
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity 320ms, transform 320ms var(--ease-glass);
+}
+
+/* ─── Gold underline draw ────────────────────────────────────────────────── */
+
+.gold-underline {
+  display: inline-block;
+  position: relative;
+}
+
+.gold-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 1.5px;
+  width: 100%;
+  background: var(--color-gold-500);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 500ms var(--ease-glass);
+}
+
+.gold-underline--drawn::after {
+  transform: scaleX(1);
+}
+
+/* ─── Scroll lock (applied by RsvpSheet when open) ──────────────────────── */
+
+body.scroll-locked {
+  overflow: hidden;
+  touch-action: none;
+}
