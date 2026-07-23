@@ -11,7 +11,6 @@ function buildWhatsAppUrl(guest: GuestRow): string {
     `Dear ${guest.name},`,
     ``,
     `With joyful hearts, we warmly invite you to celebrate one of the most special days of our lives as we begin our new chapter together. Your presence would make our wedding celebration even more meaningful.`,
-    ``,
     `- Friday, 11 September 2026`,
     `- 9:27 AM — Poruwa Ceremony`,
     `- Mandakini Club House, Divulapitiya, Sri Lanka`,
