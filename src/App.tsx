@@ -11,19 +11,21 @@ export default function App() {
   const [rsvpOpen, setRsvpOpen] = useState(false);
 
   return (
-    <>
-      <FullPageSlider>
-        {[
-          <Splash      key="splash"    />,
-          <SaveTheDate key="std"       />,
-          <Invitation  key="invitation"/>,
-          <Details     key="details"   />,
-        ]}
-      </FullPageSlider>
-
-      <SliderProgressRail />
-      <RsvpDock  onOpen={() => setRsvpOpen(true)} />
-      <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
-    </>
+    <FullPageSlider
+      overlay={
+        <>
+          <SliderProgressRail />
+          <RsvpDock onOpen={() => setRsvpOpen(true)} />
+          <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
+        </>
+      }
+    >
+      {[
+        <Splash      key="splash"     />,
+        <SaveTheDate key="std"        />,
+        <Invitation  key="invitation" />,
+        <Details     key="details"    />,
+      ]}
+    </FullPageSlider>
   );
 }

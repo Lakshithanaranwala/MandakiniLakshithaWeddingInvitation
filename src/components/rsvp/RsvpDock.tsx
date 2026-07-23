@@ -1,36 +1,35 @@
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { GlassPanel } from '../glass/GlassPanel';
+import { useSlider } from '../FullPageSlider';
 
 interface RsvpDockProps {
   onOpen: () => void;
 }
 
 export function RsvpDock({ onOpen }: RsvpDockProps) {
-  const { scrollY } = useScroll();
-  // Fade the dock in after the user scrolls 80px
-  const opacity = useTransform(scrollY, [60, 100], [0, 1]);
-  const y       = useTransform(scrollY, [60, 100], [12, 0]);
+  const { currentIndex } = useSlider();
+  const visible = currentIndex > 0;
 
   return (
+    <AnimatePresence>
+      {visible && (
     <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
       style={{
         position: 'fixed',
-        bottom: 'max(1.25rem, env(safe-area-inset-bottom, 1.25rem))',
+        // calc() properly stacks spacing on top of the safe area inset
+        bottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))',
         left: '50%',
         x: '-50%',
         width: '88%',
         maxWidth: '400px',
-        zIndex: 40,
-        opacity,
-        y,
-        pointerEvents: 'auto',
+        zIndex: 200,
       }}
     >
-      <GlassPanel
-        variant="gold"
-        radius="pill"
-        style={{ padding: 0 }}
-      >
+      <GlassPanel variant="gold" radius="pill" style={{ padding: 0 }}>
         <motion.button
           type="button"
           onClick={onOpen}
@@ -67,5 +66,7 @@ export function RsvpDock({ onOpen }: RsvpDockProps) {
         </motion.button>
       </GlassPanel>
     </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

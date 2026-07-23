@@ -62,12 +62,19 @@ export function SliderProgressRail() {
  *   internally; only snaps back when its internal scroll is at top.
  * - Reduced motion: instant switch, no transition.
  */
-export function FullPageSlider({ children }: { children: React.ReactNode[] }) {
+export function FullPageSlider({
+  children,
+  overlay,
+}: {
+  children: React.ReactNode[];
+  overlay?: React.ReactNode;
+}) {
   const reduced = useReducedMotion();
   const total   = children.length;
   const lastIdx = total - 1;
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex]   = useState(0);
+  const [transitioning, setTransitioning] = useState(false);
 
   // Refs — used inside event handlers to avoid stale closures
   const currentRef   = useRef(0);
@@ -87,9 +94,13 @@ export function FullPageSlider({ children }: { children: React.ReactNode[] }) {
       accumRef.current   = 0;
       currentRef.current = next;
       setCurrentIndex(next);
+      setTransitioning(true);
 
-      // Release lock after animation completes + small buffer
-      setTimeout(() => { lockRef.current = false; }, DURATION + 50);
+      // Release lock and clear will-change after animation completes
+      setTimeout(() => {
+        lockRef.current = false;
+        setTransitioning(false);
+      }, DURATION + 50);
     }
 
     function isOnLast(): boolean {
@@ -160,7 +171,6 @@ export function FullPageSlider({ children }: { children: React.ReactNode[] }) {
 
   return (
     <SliderContext.Provider value={{ currentIndex, total }}>
-      {/* Fixed viewport container — clips sections during slide */}
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
         {children.map((child, i) => {
           const offset     = i - currentIndex;
@@ -180,8 +190,8 @@ export function FullPageSlider({ children }: { children: React.ReactNode[] }) {
                 transform: `translateY(${offset * 100}%)`,
                 transition,
 
-                // ── GPU layer hint — only on panels that will animate ──────
-                willChange: isAdjacent ? 'transform' : 'auto',
+                // ── GPU layer — only during active transition ──────────────
+                willChange: transitioning && isAdjacent ? 'transform' : 'auto',
 
                 // ── Hide distant panels entirely (saves GPU memory) ────────
                 visibility: isAdjacent ? 'visible' : 'hidden',
@@ -196,6 +206,7 @@ export function FullPageSlider({ children }: { children: React.ReactNode[] }) {
           );
         })}
       </div>
+      {overlay}
     </SliderContext.Provider>
   );
 }
