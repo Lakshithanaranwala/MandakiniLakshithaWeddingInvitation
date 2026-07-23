@@ -10,12 +10,13 @@ function buildWhatsAppUrl(guest: GuestRow): string {
   const msg = [
     `Dear ${guest.name},`,
     ``,
-    `We warmly invite you to our wedding! Your presence would make our day truly special.`,
+    `With joyful hearts, we warmly invite you to celebrate one of the most special days of our lives as we begin our new chapter together. Your presence would make our wedding celebration even more meaningful.`,
     ``,
     `View your invitation & RSVP here:`,
     link,
     ``,
-    `With love, Mandakini & Lakshitha`,
+    `With love,`,
+    `Mandakini & Lakshitha`
   ].join('\n');
   const phone = guest.phone.replace(/\D/g, '');
   const url   = new URL(`https://wa.me/${phone}`);
