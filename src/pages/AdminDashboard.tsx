@@ -23,7 +23,7 @@ function buildWhatsAppUrl(guest: GuestRow): string {
     `Mandakini & Lakshitha 💚`,
   ].join('\n');
   const phone = guest.phone.replace(/\D/g, '');
-  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  return `whatsapp://send?phone=${phone}&text=${encodeURIComponent(msg)}`;
 }
 
 export function AdminDashboard() {
