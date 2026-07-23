@@ -116,7 +116,7 @@ export function Splash() {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(22,39,31,0.18) 0%, transparent 45%)',
+          background: 'linear-gradient(180deg, rgba(22, 39, 31, 0.05) 0%, transparent 45%)',
           zIndex: 1,
         }}
       />
@@ -126,7 +126,7 @@ export function Splash() {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(ellipse 90% 60% at 50% 55%, rgba(22,39,31,0.62) 0%, rgba(22,39,31,0.18) 70%, transparent 100%)',
+          background: 'radial-gradient(ellipse 90% 60% at 50% 55%, rgba(22, 39, 31, 0.22) 0%, rgba(75, 91, 83, 0) 70%, transparent 100%)',
           zIndex: 1,
         }}
       />
