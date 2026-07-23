@@ -44,9 +44,6 @@ export function RsvpSheet({ isOpen, onClose }: RsvpSheetProps) {
   useEffect(() => {
     if (!isOpen) return;
 
-    // Auto-focus the first field
-    setTimeout(() => firstFocusRef.current?.focus(), 50);
-
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') { onClose(); return; }
 
