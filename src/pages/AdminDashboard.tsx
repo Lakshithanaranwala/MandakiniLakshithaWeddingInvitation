@@ -278,12 +278,12 @@ export function AdminDashboard() {
                           )}
                         </td>
                         <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                          <button
-                            onClick={() => window.open(buildWhatsAppUrl(g), '_blank', 'noopener,noreferrer')}
-                            style={waBtn}
+                          <a
+                            href={buildWhatsAppUrl(g)}
+                            style={{ ...waBtn, textDecoration: 'none', display: 'inline-block' }}
                           >
                             WhatsApp
-                          </button>
+                          </a>
                           <button
                             onClick={() => copyLink(g.token)}
                             style={{ ...copyBtn, background: copied === g.token ? '#e8f5e9' : '#f0ece6', color: copied === g.token ? '#2e7d32' : '#555' }}
