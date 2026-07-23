@@ -240,7 +240,7 @@ export function SaveTheDate() {
           margin: 0,
           textAlign: 'center',
         }}>
-          Mandakini Club House &middot; Divulapitiya
+          
         </motion.p>
       </div>
     </section>
