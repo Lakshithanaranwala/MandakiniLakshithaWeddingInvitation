@@ -35,6 +35,7 @@ export function AdminDashboard() {
   const [rsvps,   setRsvps]   = useState<RsvpRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied,  setCopied]  = useState<string | null>(null);
+  const [filter,  setFilter]  = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
 
   // Hard reset
   const [resetOpen,     setResetOpen]     = useState(false);
@@ -116,6 +117,15 @@ export function AdminDashboard() {
   const declined = rsvps.filter((r) => r.attendance === 'decline').length;
   const pending  = guests.length - rsvpByGuest.size;
 
+  // Filtered guest list
+  const filteredGuests = guests.filter((g) => {
+    const rsvp = rsvpByGuest.get(g.id);
+    if (filter === 'pending')  return !rsvp;
+    if (filter === 'accepted') return rsvp?.attendance === 'accept';
+    if (filter === 'declined') return rsvp?.attendance === 'decline';
+    return true;
+  });
+
   return (
     <div style={{ minHeight: '100svh', background: '#f4f1ec', fontFamily: 'var(--font-ui)' }}>
 
@@ -179,27 +189,38 @@ export function AdminDashboard() {
           gap: '0.75rem',
           marginBottom: '1.75rem',
         }}>
-          {[
-            { label: 'Invited',  value: guests.length, color: 'var(--color-forest-700)' },
-            { label: 'Pending',  value: pending,        color: '#9a7b00' },
-            { label: 'Accepted', value: accepted,       color: '#2e7d32' },
-            { label: 'Declined', value: declined,       color: '#b71c1c' },
-          ].map((s) => (
-            <div key={s.label} style={{
-              background: 'white',
-              borderRadius: '14px',
-              padding: '1rem 0.75rem',
-              textAlign: 'center',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-            }}>
-              <p style={{ margin: '0 0 0.2rem', fontFamily: 'var(--font-display)', fontSize: '2rem', color: s.color, lineHeight: 1 }}>
-                {loading ? '–' : s.value}
-              </p>
-              <p style={{ margin: 0, fontSize: '0.58rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#aaa' }}>
-                {s.label}
-              </p>
-            </div>
-          ))}
+          {([
+            { label: 'Invited',  value: guests.length, color: 'var(--color-forest-700)', key: 'all'      },
+            { label: 'Pending',  value: pending,        color: '#9a7b00',                key: 'pending'  },
+            { label: 'Accepted', value: accepted,       color: '#2e7d32',                key: 'accepted' },
+            { label: 'Declined', value: declined,       color: '#b71c1c',                key: 'declined' },
+          ] as const).map((s) => {
+            const active = filter === s.key;
+            return (
+              <button
+                key={s.label}
+                onClick={() => setFilter(s.key)}
+                style={{
+                  background: active ? s.color : 'white',
+                  borderRadius: '14px',
+                  padding: '1rem 0.75rem',
+                  textAlign: 'center',
+                  boxShadow: active ? `0 4px 12px ${s.color}40` : '0 1px 4px rgba(0,0,0,0.06)',
+                  border: active ? `2px solid ${s.color}` : '2px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'all 180ms ease',
+                  width: '100%',
+                }}
+              >
+                <p style={{ margin: '0 0 0.2rem', fontFamily: 'var(--font-display)', fontSize: '2rem', color: active ? 'white' : s.color, lineHeight: 1 }}>
+                  {loading ? '–' : s.value}
+                </p>
+                <p style={{ margin: 0, fontSize: '0.58rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: active ? 'rgba(255,255,255,0.8)' : '#aaa' }}>
+                  {s.label}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Add Guest ── */}
@@ -245,11 +266,26 @@ export function AdminDashboard() {
 
         {/* ── Guest List ── */}
         <section style={cardStyle}>
-          <h2 style={sectionHeading}>Guest List ({guests.length})</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.1rem' }}>
+            <h2 style={{ ...sectionHeading, margin: 0 }}>
+              {filter === 'all' ? 'All Guests' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+              {' '}({filteredGuests.length})
+            </h2>
+            {filter !== 'all' && (
+              <button
+                onClick={() => setFilter('all')}
+                style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.1em', background: 'none', border: 'none', color: 'var(--color-sage-400)', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
           {loading ? (
             <p style={emptyStyle}>Loading…</p>
           ) : guests.length === 0 ? (
             <p style={emptyStyle}>No guests yet. Add one above.</p>
+          ) : filteredGuests.length === 0 ? (
+            <p style={emptyStyle}>No {filter} guests.</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
@@ -261,7 +297,7 @@ export function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {guests.map((g, i) => {
+                  {filteredGuests.map((g, i) => {
                     const rsvp = rsvpByGuest.get(g.id);
                     return (
                       <tr key={g.id} style={{ background: i % 2 === 0 ? 'white' : '#faf8f4' }}>
