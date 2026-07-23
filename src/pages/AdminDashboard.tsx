@@ -10,20 +10,17 @@ function buildWhatsAppUrl(guest: GuestRow): string {
   const msg = [
     `Dear ${guest.name},`,
     ``,
-    `You are cordially invited to the wedding of Mandakini & Lakshitha! 🌿`,
+    `We warmly invite you to our wedding! Your presence would make our day truly special.`,
     ``,
-    `📅 Friday, 11 September 2026`,
-    `⏰ 9:27 AM — Poruwa Ceremony`, 
-    `📍 Mandakini Club House, Divulapitiya, Sri Lanka`,
-    ``, 
-    `Your personal invitation:`,
+    `View your invitation & RSVP here:`,
     link,
-    ``, 
-    `With love,`,                                                                                                                                                                                          
-     `Mandakini & Lakshitha 💚`,
+    ``,
+    `With love, Mandakini & Lakshitha`,
   ].join('\n');
   const phone = guest.phone.replace(/\D/g, '');
-  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  const url   = new URL(`https://wa.me/${phone}`);
+  url.searchParams.set('text', msg);
+  return url.toString();
 }
 
 export function AdminDashboard() {
