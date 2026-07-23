@@ -15,7 +15,7 @@ export default function App() {
       disabled={rsvpOpen}
       overlay={
         <>
-          <RsvpDock onOpen={() => setRsvpOpen(true)} />
+          <RsvpDock onOpen={() => setRsvpOpen(true)} sheetOpen={rsvpOpen} />
           <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
         </>
       }

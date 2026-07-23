@@ -4,11 +4,12 @@ import { useSwiper }  from '../PageSwiper';
 
 interface RsvpDockProps {
   onOpen: () => void;
+  sheetOpen: boolean;
 }
 
-export function RsvpDock({ onOpen }: RsvpDockProps) {
+export function RsvpDock({ onOpen, sheetOpen }: RsvpDockProps) {
   const { currentIndex } = useSwiper();
-  const visible = currentIndex > 0;
+  const visible = currentIndex > 0 && !sheetOpen;
 
   return (
     <AnimatePresence>
