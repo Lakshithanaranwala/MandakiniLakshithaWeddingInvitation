@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PageSwiper } from './components/PageSwiper';
 import { Splash }      from './components/sections/Splash';
 import { SaveTheDate } from './components/sections/SaveTheDate';
 import { Invitation }  from './components/sections/Invitation';
@@ -10,15 +11,20 @@ export default function App() {
   const [rsvpOpen, setRsvpOpen] = useState(false);
 
   return (
-    <>
-      <main>
-        <Splash />
-        <SaveTheDate />
-        <Invitation />
-        <Details />
-      </main>
-      <RsvpDock onOpen={() => setRsvpOpen(true)} />
-      <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
-    </>
+    <PageSwiper
+      overlay={
+        <>
+          <RsvpDock onOpen={() => setRsvpOpen(true)} />
+          <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
+        </>
+      }
+    >
+      {[
+        <Splash      key="splash"     />,
+        <SaveTheDate key="std"        />,
+        <Invitation  key="invitation" />,
+        <Details     key="details"    />,
+      ]}
+    </PageSwiper>
   );
 }
