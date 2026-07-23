@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GlassPanel } from '../glass/GlassPanel';
 import { GlassButton } from '../glass/GlassButton';
 import { useGuest } from '../../hooks/useGuest';
+import { supabase } from '../../lib/supabase';
 
 type Attendance = 'accept' | 'decline' | null;
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
@@ -76,21 +77,15 @@ export function RsvpSheet({ isOpen, onClose }: RsvpSheetProps) {
     if (!attendance) return;
     setSubmitState('submitting');
 
-    const endpoint = import.meta.env.VITE_RSVP_ENDPOINT as string | undefined;
-    if (!endpoint) {
-      // Dev mode — simulate success after 1s
-      await new Promise((r) => setTimeout(r, 1000));
-      setSubmitState('success');
-      return;
-    }
-
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, attendance, guestCount, message }),
+      const { error } = await supabase.from('rsvps').insert({
+        guest_id:    guest?.id   || null,
+        name,
+        attendance,
+        guest_count: attendance === 'accept' ? guestCount : null,
+        message:     message.trim() || null,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (error) throw error;
       setSubmitState('success');
     } catch {
       setSubmitState('error');

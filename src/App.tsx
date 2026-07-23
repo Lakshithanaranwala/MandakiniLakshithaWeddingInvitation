@@ -1,31 +1,22 @@
-import { useState } from 'react';
-import { PageSwiper } from './components/PageSwiper';
-import { Splash }      from './components/sections/Splash';
-import { SaveTheDate } from './components/sections/SaveTheDate';
-import { Invitation }  from './components/sections/Invitation';
-import { Details }     from './components/sections/Details';
-import { RsvpDock }    from './components/rsvp/RsvpDock';
-import { RsvpSheet }   from './components/rsvp/RsvpSheet';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { GuestSite }       from './pages/GuestSite';
+import { AdminLogin }      from './pages/AdminLogin';
+import { AdminDashboard }  from './pages/AdminDashboard';
+import { isAuthenticated } from './lib/auth';
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  return isAuthenticated() ? <>{children}</> : <Navigate to="/admin/login" replace />;
+}
 
 export default function App() {
-  const [rsvpOpen, setRsvpOpen] = useState(false);
-
   return (
-    <PageSwiper
-      disabled={rsvpOpen}
-      overlay={
-        <>
-          <RsvpDock onOpen={() => setRsvpOpen(true)} sheetOpen={rsvpOpen} />
-          <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
-        </>
-      }
-    >
-      {[
-        <Splash      key="splash"     />,
-        <SaveTheDate key="std"        />,
-        <Invitation  key="invitation" />,
-        <Details     key="details"    />,
-      ]}
-    </PageSwiper>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/"             element={<GuestSite />} />
+        <Route path="/admin/login"  element={<AdminLogin />} />
+        <Route path="/admin"        element={<RequireAuth><AdminDashboard /></RequireAuth>} />
+        <Route path="*"             element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

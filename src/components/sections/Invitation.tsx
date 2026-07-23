@@ -5,7 +5,7 @@ import { Reveal } from '../motion/Reveal';
 import { useGuest } from '../../hooks/useGuest';
 
 export function Invitation() {
-  const { guest, setName } = useGuest();
+  const { guest, loading, setName } = useGuest();
   const [inputValue, setInputValue]   = useState('');
   const [nameVisible, setNameVisible] = useState(false);
   const nameRef = useRef<HTMLSpanElement>(null);
@@ -145,8 +145,8 @@ export function Invitation() {
             )}
           </div>
 
-          {/* No-param fallback: name input */}
-          {!displayName && (
+          {/* No-param fallback: name input (hidden while loading token) */}
+          {!displayName && !loading && (
             <div style={{ marginTop: '1.5rem' }}>
               <label
                 htmlFor="guest-name-input"
