@@ -174,7 +174,7 @@ export function RsvpSheet({ isOpen, onClose }: RsvpSheetProps) {
               <div style={{ padding: '0.5rem 1.75rem 0' }}>
                 <AnimatePresence mode="wait">
                   {submitState === 'success' ? (
-                    <SuccessView key="success" onClose={onClose} />
+                    <SuccessView key="success" attendance={attendance} onClose={onClose} />
                   ) : (
                     <motion.form
                       key="form"
@@ -368,7 +368,9 @@ function AttendanceToggle({
   );
 }
 
-function SuccessView({ onClose }: { onClose: () => void }) {
+function SuccessView({ attendance, onClose }: { attendance: Attendance; onClose: () => void }) {
+  const accepted = attendance === 'accept';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -414,7 +416,7 @@ function SuccessView({ onClose }: { onClose: () => void }) {
             margin: '0 0 0.5em',
           }}
         >
-          We can&rsquo;t wait to see you.
+          {accepted ? 'We can\u2019t wait to see you.' : 'We\u2019ll miss you dearly.'}
         </p>
         <p
           style={{
@@ -425,7 +427,9 @@ function SuccessView({ onClose }: { onClose: () => void }) {
             letterSpacing: '0.05em',
           }}
         >
-          Your RSVP has been received.
+          {accepted
+            ? 'Your RSVP has been received.'
+            : 'Thank you for letting us know.'}
         </p>
       </div>
 
