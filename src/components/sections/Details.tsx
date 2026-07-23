@@ -116,7 +116,7 @@ export function Details() {
                 Poruwa ceremony
               </span>
               <br />
-              10:28 AM
+              9:27 AM
             </p>
           </CardBody>
 
