@@ -10,17 +10,9 @@ function buildWhatsAppUrl(guest: GuestRow): string {
   const msg = [
     `Dear ${guest.name},`,
     ``,
-    `You are cordially invited to the wedding of Mandakini & Lakshitha! 🌿`,
+    `We are delighted to invite you to our wedding day with us! Please find your wedding invitation card and all the event details here. We would love to have your presence and blessings. Please let us know if you can make it by submitting your RSVP on the website.`,
     ``,
-    `📅 Friday, 11 September 2026`,
-    `⏰ 9:27 AM — Poruwa Ceremony`,
-    `📍 Mandakini Club House, Divulapitiya, Sri Lanka`,
-    ``,
-    `Your personal invitation:`,
     link,
-    ``,
-    `With love,`,
-    `Mandakini & Lakshitha 💚`,
   ].join('\n');
   const phone = guest.phone.replace(/\D/g, '');
   return `whatsapp://send?phone=${phone}&text=${encodeURIComponent(msg)}`;
