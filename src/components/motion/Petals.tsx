@@ -1,83 +1,173 @@
-import { motion } from 'motion/react';
+import { useEffect, useRef } from 'react';
 
-// 7 petals, each with unique path, size, start position, and timing
-const PETALS = [
-  { id: 1, startX: '12vw',  startY: '-5vh',  size: 22, dur: 16, delay: 0,   rotate: 35  },
-  { id: 2, startX: '28vw',  startY: '-8vh',  size: 17, dur: 21, delay: 2.5, rotate: -20 },
-  { id: 3, startX: '55vw',  startY: '-3vh',  size: 25, dur: 18, delay: 1.2, rotate: 60  },
-  { id: 4, startX: '72vw',  startY: '-6vh',  size: 14, dur: 22, delay: 4,   rotate: -45 },
-  { id: 5, startX: '88vw',  startY: '-4vh',  size: 20, dur: 14, delay: 0.8, rotate: 15  },
-  { id: 6, startX: '42vw',  startY: '-7vh',  size: 18, dur: 19, delay: 3.1, rotate: -30 },
-  { id: 7, startX: '65vw',  startY: '-2vh',  size: 16, dur: 17, delay: 5.5, rotate: 50  },
-] as const;
+// ─── Config ───────────────────────────────────────────────────────────────────
 
-// Simple botanical petal SVG path
-function PetalSvg({ size }: { size: number }) {
-  return (
-    <svg
-      width={size}
-      height={size * 1.6}
-      viewBox="0 0 24 38"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 37C12 37 2 24 2 13C2 6.9 6.5 2 12 2C17.5 2 22 6.9 22 13C22 24 12 37 12 37Z"
-        fill="rgba(139, 163, 150, 0.5)"
-        stroke="rgba(139, 163, 150, 0.3)"
-        strokeWidth="0.5"
-      />
-      <path
-        d="M12 5 Q14 13 12 35"
-        stroke="rgba(139, 163, 150, 0.4)"
-        strokeWidth="0.5"
-        fill="none"
-      />
-    </svg>
-  );
+const COUNT = 28;
+
+// Color palette: white → cream → blush → soft rose
+const COLORS: [number, number, number][] = [
+  [255, 255, 255],  // white
+  [255, 248, 242],  // warm cream
+  [255, 232, 232],  // blush
+  [255, 215, 215],  // light rose
+  [250, 220, 225],  // petal pink
+];
+
+// ─── Petal type ───────────────────────────────────────────────────────────────
+
+interface Petal {
+  x: number;
+  y: number;
+  size: number;
+  rotation: number;    // radians
+  rotSpeed: number;    // radians / frame
+  vy: number;          // vertical speed
+  vx: number;          // base horizontal drift
+  sway: number;        // current phase
+  swaySpeed: number;   // radians / frame
+  swayAmp: number;     // px peak sway
+  opacity: number;
+  color: [number, number, number];
 }
 
-/**
- * 7 ambient SVG petals drifting across the Splash section.
- * Only rendered when prefers-reduced-motion is unset.
- * Each petal loops independently on a 14–22s cycle.
- */
+function makePetal(vw: number, vh: number, scattered: boolean): Petal {
+  return {
+    x:         Math.random() * vw,
+    y:         scattered ? Math.random() * vh : -(8 + Math.random() * 20),
+    size:      7 + Math.random() * 11,           // 7 – 18 px
+    rotation:  Math.random() * Math.PI * 2,
+    rotSpeed:  (Math.random() - 0.5) * 0.045,
+    vy:        0.35 + Math.random() * 0.7,        // gentle fall speed
+    vx:        (Math.random() - 0.5) * 0.3,       // slight horizontal bias
+    sway:      Math.random() * Math.PI * 2,
+    swaySpeed: 0.007 + Math.random() * 0.013,
+    swayAmp:   0.6 + Math.random() * 1.8,
+    opacity:   0.22 + Math.random() * 0.32,       // 22 – 54 % — subtle but visible
+    color:     COLORS[Math.floor(Math.random() * COLORS.length)],
+  };
+}
+
+// ─── Draw a single teardrop petal with gradient + center vein ─────────────────
+
+function drawPetal(ctx: CanvasRenderingContext2D, p: Petal) {
+  const { x, y, size, rotation, opacity, color: [r, g, b] } = p;
+  const w = size * 0.55;
+  const h = size;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+
+  // Petal outline (teardrop bezier)
+  ctx.beginPath();
+  ctx.moveTo(0, -h);
+  ctx.bezierCurveTo( w, -h * 0.45,  w,  h * 0.35, 0,  h);
+  ctx.bezierCurveTo(-w,  h * 0.35, -w, -h * 0.45, 0, -h);
+  ctx.closePath();
+
+  // Radial gradient for soft light-catching effect
+  const grad = ctx.createRadialGradient(-w * 0.3, -h * 0.4, 0, 0, 0, h * 1.1);
+  grad.addColorStop(0,   `rgba(${r},${g},${b},${opacity})`);
+  grad.addColorStop(0.5, `rgba(${r - 10},${g - 8},${b - 5},${opacity * 0.88})`);
+  grad.addColorStop(1,   `rgba(${r - 20},${g - 15},${b - 10},${opacity * 0.55})`);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Subtle center vein
+  ctx.beginPath();
+  ctx.moveTo(0, -h * 0.75);
+  ctx.quadraticCurveTo(w * 0.15, 0, 0, h * 0.8);
+  ctx.strokeStyle = `rgba(${r - 35},${g - 30},${b - 25},${opacity * 0.28})`;
+  ctx.lineWidth   = 0.6;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function Petals() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let vw = canvas.offsetWidth;
+    let vh = canvas.offsetHeight;
+    canvas.width  = vw;
+    canvas.height = vh;
+
+    // Half scattered across screen on load, half queued above top
+    const petals: Petal[] = Array.from({ length: COUNT }, (_, i) =>
+      makePetal(vw, vh, i >= COUNT / 2)
+    );
+
+    let rafId: number;
+
+    function tick() {
+      ctx!.clearRect(0, 0, vw, vh);
+
+      for (const p of petals) {
+        // Wind sway
+        p.sway += p.swaySpeed;
+        p.x    += p.vx + Math.sin(p.sway) * p.swayAmp;
+
+        // Gravity — accelerates gently, caps so it never feels mechanical
+        p.vy = Math.min(p.vy + 0.006, 1.8);
+        p.y += p.vy;
+
+        // Tumble
+        p.rotation += p.rotSpeed;
+
+        // Wrap horizontally so petals re-enter from the other side
+        if (p.x < -p.size * 2)    p.x = vw + p.size;
+        if (p.x > vw + p.size * 2) p.x = -p.size;
+
+        // Recycle petal when it exits the bottom
+        if (p.y > vh + p.size * 2) {
+          Object.assign(p, makePetal(vw, vh, false));
+        }
+
+        drawPetal(ctx!, p);
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    tick();
+
+    function onResize() {
+      if (!canvas) return;
+      vw = canvas.offsetWidth;
+      vh = canvas.offsetHeight;
+      canvas.width  = vw;
+      canvas.height = vh;
+    }
+
+    window.addEventListener('resize', onResize, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
   return (
-    <div
+    <canvas
+      ref={canvasRef}
       aria-hidden="true"
       style={{
         position: 'absolute',
         inset: 0,
+        width: '100%',
+        height: '100%',
         pointerEvents: 'none',
-        overflow: 'hidden',
-        zIndex: 2,
+        zIndex: 2,          // above photo overlays, below text (z-index: 3)
       }}
-    >
-      {PETALS.map((p) => (
-        <motion.div
-          key={p.id}
-          style={{
-            position: 'absolute',
-            left: p.startX,
-            top: p.startY,
-            opacity: 0.35,
-          }}
-          animate={{
-            y: ['0vh', '115vh'],
-            rotate: [p.rotate, p.rotate + 180, p.rotate + 360],
-            x: [0, p.id % 2 === 0 ? 30 : -30, 0],
-          }}
-          transition={{
-            duration: p.dur,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        >
-          <PetalSvg size={p.size} />
-        </motion.div>
-      ))}
-    </div>
+    />
   );
 }
