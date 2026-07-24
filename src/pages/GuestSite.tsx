@@ -23,7 +23,11 @@ function GuestProvider({ children }: { children: React.ReactNode }) {
       .eq('token', token)
       .single()
       .then(({ data }) => {
-        if (data) setGuest({ id: data.id, name: data.name, seats: data.seats });
+        if (data) {
+          setGuest({ id: data.id, name: data.name, seats: data.seats });
+          // Record this page view
+          supabase.from('link_views').insert({ guest_id: data.id });
+        }
         setLoading(false);
       });
   }, []);

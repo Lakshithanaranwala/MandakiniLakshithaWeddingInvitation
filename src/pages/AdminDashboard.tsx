@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, type GuestRow, type RsvpRow } from '../lib/supabase';
+import { supabase, type GuestRow, type RsvpRow, type LinkViewRow } from '../lib/supabase';
 import { logout } from '../lib/auth';
 
 const SITE_URL = 'https://mandakini-lakshitha-wedding-invitat.vercel.app';
@@ -32,6 +32,7 @@ export function AdminDashboard() {
 
   const [guests,  setGuests]  = useState<GuestRow[]>([]);
   const [rsvps,   setRsvps]   = useState<RsvpRow[]>([]);
+  const [views,   setViews]   = useState<LinkViewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied,  setCopied]  = useState<string | null>(null);
   const [filter,  setFilter]  = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
@@ -49,12 +50,14 @@ export function AdminDashboard() {
   const [adding,   setAdding]   = useState(false);
 
   async function load() {
-    const [{ data: g }, { data: r }] = await Promise.all([
+    const [{ data: g }, { data: r }, { data: v }] = await Promise.all([
       supabase.from('guests').select('*').order('created_at', { ascending: false }),
       supabase.from('rsvps').select('*').order('submitted_at', { ascending: false }),
+      supabase.from('link_views').select('*'),
     ]);
     setGuests(g ?? []);
     setRsvps(r ?? []);
+    setViews(v ?? []);
     setLoading(false);
   }
 
@@ -89,6 +92,7 @@ export function AdminDashboard() {
       return;
     }
     setResetting(true);
+    await supabase.from('link_views').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('rsvps').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('guests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     setResetting(false);
@@ -119,6 +123,18 @@ export function AdminDashboard() {
   const confirmedSeats = rsvps
     .filter((r) => r.attendance === 'accept')
     .reduce((sum, r) => sum + (r.guest_count ?? 1), 0);
+
+  // Per-guest view stats
+  const viewsByGuest = new Map<string, { count: number; lastSeen: string }>();
+  for (const v of views) {
+    const existing = viewsByGuest.get(v.guest_id);
+    if (!existing) {
+      viewsByGuest.set(v.guest_id, { count: 1, lastSeen: v.viewed_at });
+    } else {
+      existing.count++;
+      if (v.viewed_at > existing.lastSeen) existing.lastSeen = v.viewed_at;
+    }
+  }
 
   // Filtered guest list
   const filteredGuests = guests.filter((g) => {
@@ -295,7 +311,7 @@ export function AdminDashboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr>
-                    {['Name', 'Phone', 'Seats', 'RSVP status', 'Actions'].map((h) => (
+                    {['Name', 'Phone', 'Seats', 'RSVP status', 'Views', 'Last opened', 'Actions'].map((h) => (
                       <th key={h} style={thStyle}>{h}</th>
                     ))}
                   </tr>
@@ -326,6 +342,21 @@ export function AdminDashboard() {
                           ) : (
                             <span style={{ color: '#ccc', fontSize: '0.75rem' }}>Pending</span>
                           )}
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'center' }}>
+                          {viewsByGuest.get(g.id)
+                            ? <span style={{ fontWeight: 500, color: '#1565c0' }}>{viewsByGuest.get(g.id)!.count}</span>
+                            : <span style={{ color: '#ccc' }}>0</span>
+                          }
+                        </td>
+                        <td style={{ ...tdStyle, fontSize: '0.75rem', color: '#888', whiteSpace: 'nowrap' }}>
+                          {viewsByGuest.get(g.id)
+                            ? new Date(viewsByGuest.get(g.id)!.lastSeen).toLocaleString('en-GB', {
+                                day: 'numeric', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit',
+                              })
+                            : <span style={{ color: '#ccc' }}>—</span>
+                          }
                         </td>
                         <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                           <a

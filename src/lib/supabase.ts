@@ -23,3 +23,9 @@ export interface RsvpRow {
   message: string | null;
   submitted_at: string;
 }
+
+export interface LinkViewRow {
+  id: string;
+  guest_id: string;
+  viewed_at: string;
+}
