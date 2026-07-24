@@ -113,9 +113,12 @@ export function AdminDashboard() {
   // Stats
   const rsvpByGuest = new Map(rsvps.map((r) => [r.guest_id, r]));
   const guestById   = new Map(guests.map((g) => [g.id, g]));
-  const accepted = rsvps.filter((r) => r.attendance === 'accept').length;
-  const declined = rsvps.filter((r) => r.attendance === 'decline').length;
-  const pending  = guests.length - rsvpByGuest.size;
+  const accepted       = rsvps.filter((r) => r.attendance === 'accept').length;
+  const declined       = rsvps.filter((r) => r.attendance === 'decline').length;
+  const pending        = guests.length - rsvpByGuest.size;
+  const confirmedSeats = rsvps
+    .filter((r) => r.attendance === 'accept')
+    .reduce((sum, r) => sum + (r.guest_count ?? 1), 0);
 
   // Filtered guest list
   const filteredGuests = guests.filter((g) => {
@@ -185,21 +188,22 @@ export function AdminDashboard() {
         {/* ── Stats ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
+          gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '0.75rem',
           marginBottom: '1.75rem',
         }}>
           {([
-            { label: 'Invited',  value: guests.length, color: 'var(--color-forest-700)', key: 'all'      },
-            { label: 'Pending',  value: pending,        color: '#9a7b00',                key: 'pending'  },
-            { label: 'Accepted', value: accepted,       color: '#2e7d32',                key: 'accepted' },
-            { label: 'Declined', value: declined,       color: '#b71c1c',                key: 'declined' },
+            { label: 'Invited',  value: guests.length,  color: 'var(--color-forest-700)', key: 'all'      },
+            { label: 'Pending',  value: pending,         color: '#9a7b00',                key: 'pending'  },
+            { label: 'Accepted', value: accepted,        color: '#2e7d32',                key: 'accepted' },
+            { label: 'Declined', value: declined,        color: '#b71c1c',                key: 'declined' },
+            { label: 'Seats confirmed', value: confirmedSeats, color: '#1565c0',          key: null       },
           ] as const).map((s) => {
-            const active = filter === s.key;
+            const active = s.key !== null && filter === s.key;
             return (
               <button
                 key={s.label}
-                onClick={() => setFilter(s.key)}
+                onClick={() => s.key !== null && setFilter(s.key)}
                 style={{
                   background: active ? s.color : 'white',
                   borderRadius: '14px',
@@ -207,7 +211,7 @@ export function AdminDashboard() {
                   textAlign: 'center',
                   boxShadow: active ? `0 4px 12px ${s.color}40` : '0 1px 4px rgba(0,0,0,0.06)',
                   border: active ? `2px solid ${s.color}` : '2px solid transparent',
-                  cursor: 'pointer',
+                  cursor: s.key !== null ? 'pointer' : 'default',
                   transition: 'all 180ms ease',
                   width: '100%',
                 }}
