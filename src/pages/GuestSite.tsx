@@ -26,7 +26,7 @@ function GuestProvider({ children }: { children: React.ReactNode }) {
         if (data) {
           setGuest({ id: data.id, name: data.name, seats: data.seats });
           // Record this page view
-          supabase.from('link_views').insert({ guest_id: data.id });
+          supabase.from('link_views').insert({ guest_id: data.id }).then();
         }
         setLoading(false);
       });
