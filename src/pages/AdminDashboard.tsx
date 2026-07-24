@@ -112,6 +112,7 @@ export function AdminDashboard() {
 
   // Stats
   const rsvpByGuest = new Map(rsvps.map((r) => [r.guest_id, r]));
+  const guestById   = new Map(guests.map((g) => [g.id, g]));
   const accepted = rsvps.filter((r) => r.attendance === 'accept').length;
   const declined = rsvps.filter((r) => r.attendance === 'decline').length;
   const pending  = guests.length - rsvpByGuest.size;
@@ -366,7 +367,7 @@ export function AdminDashboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr>
-                    {['Name', 'Attendance', 'Guests', 'Message', 'Date'].map((h) => (
+                    {['Name', 'Attendance', 'Allocated', 'Confirmed', 'Message', 'Date'].map((h) => (
                       <th key={h} style={thStyle}>{h}</th>
                     ))}
                   </tr>
@@ -390,7 +391,23 @@ export function AdminDashboard() {
                           {r.attendance === 'accept' ? 'Accepted' : 'Declined'}
                         </span>
                       </td>
-                      <td style={{ ...tdStyle, textAlign: 'center' }}>{r.guest_count ?? '—'}</td>
+                      <td style={{ ...tdStyle, textAlign: 'center', color: '#888' }}>
+                        {guestById.get(r.guest_id ?? '')?.seats ?? '—'}
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        {r.attendance === 'accept' ? (
+                          (() => {
+                            const allocated = guestById.get(r.guest_id ?? '')?.seats;
+                            const confirmed = r.guest_count ?? 1;
+                            const under = allocated !== undefined && confirmed < allocated;
+                            return (
+                              <span style={{ color: under ? '#b71c1c' : '#2e7d32', fontWeight: under ? 600 : 400 }}>
+                                {confirmed}{under ? ' ⚠' : ''}
+                              </span>
+                            );
+                          })()
+                        ) : '—'}
+                      </td>
                       <td style={{ ...tdStyle, maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#666' }}>
                         {r.message || <span style={{ color: '#ccc' }}>—</span>}
                       </td>
