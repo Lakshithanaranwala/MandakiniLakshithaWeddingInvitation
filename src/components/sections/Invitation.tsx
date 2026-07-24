@@ -8,7 +8,7 @@ export function Invitation() {
   const { guest, loading, setName } = useGuest();
   const [inputValue, setInputValue]   = useState('');
   const [nameVisible, setNameVisible] = useState(false);
-  const nameRef = useRef<HTMLSpanElement>(null);
+  const nameRef = useRef<HTMLParagraphElement>(null);
 
   // Trigger the gold underline once name is in view
   useEffect(() => {
@@ -87,81 +87,100 @@ export function Invitation() {
         <GlassPanel
           variant="light"
           radius="panel"
-          style={{ padding: 'clamp(2rem, 6vw, 3rem) clamp(1.75rem, 5vw, 2.5rem)' }}
+          style={{ padding: 'clamp(2rem, 6vw, 3rem) clamp(1.75rem, 5vw, 2.5rem)', textAlign: 'center' }}
         >
-          {/* Greeting */}
-          <div
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(1rem, 4vw, 1.3rem)',
-              fontWeight: 400,
-              fontStyle: 'italic',
-              color: 'var(--color-forest-900)',
-              lineHeight: 1.7,
-            }}
-          >
-            <p style={{ margin: '0 0 1.2em' }}>
-              Dear{' '}
-              {displayName ? (
-                <motion.span
-                  ref={nameRef}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className={['gold-underline', nameVisible ? 'gold-underline--drawn' : ''].join(' ')}
-                  style={{ color: 'var(--color-gold-500)', fontStyle: 'normal' }}
-                >
-                  {displayName}
-                </motion.span>
-              ) : (
-                <span style={{ color: 'var(--color-sage-400)', fontStyle: 'normal' }}>Friend</span>
-              )}
-              ,
-            </p>
+          {/* Dear line */}
+          <p style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: 'clamp(0.65rem, 2.2vw, 0.75rem)',
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: 'var(--color-sage-400)',
+            margin: '0 0 0.6rem',
+          }}>
+            Dear
+          </p>
 
-            <p style={{ margin: '0 0 1em' }}>
+          {/* Guest name — large & highlighted */}
+          {displayName ? (
+            <motion.p
+              ref={nameRef}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className={['gold-underline', nameVisible ? 'gold-underline--drawn' : ''].join(' ')}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(2rem, 9vw, 3rem)',
+                fontWeight: 600,
+                fontStyle: 'normal',
+                letterSpacing: '0.04em',
+                color: 'var(--color-forest-700)',
+                margin: '0 0 1.5rem',
+                lineHeight: 1.15,
+              }}
+            >
+              {displayName}
+            </motion.p>
+          ) : (
+            <p style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2rem, 9vw, 3rem)',
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              color: 'rgba(138,163,150,0.45)',
+              margin: '0 0 1.5rem',
+              lineHeight: 1.15,
+            }}>
+              Friend
+            </p>
+          )}
+
+          {/* Divider */}
+          <div style={{
+            width: 'clamp(2.5rem, 10vw, 4rem)',
+            height: '1px',
+            background: 'var(--color-gold-500)',
+            opacity: 0.4,
+            margin: '0 auto 1.5rem',
+          }} />
+
+          {/* Body text */}
+          <div style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(1.05rem, 4vw, 1.25rem)',
+            fontWeight: 400,
+            fontStyle: 'italic',
+            color: 'var(--color-forest-900)',
+            lineHeight: 1.75,
+          }}>
+            <p style={{ margin: '0 0 0.9em' }}>
               Together with our families, we invite you to share in the joy of our wedding.
             </p>
-
-            <p style={{ margin: '0 0 1.2em' }}>
+            <p style={{ margin: 0 }}>
               Your presence is the greatest gift.
             </p>
-
-            {guest && guest.seats > 1 && (
-              <p
-                style={{
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: '0.85rem',
-                  fontStyle: 'normal',
-                  letterSpacing: '0.05em',
-                  color: 'var(--color-sage-400)',
-                  margin: '0 0 1em',
-                  borderTop: '1px solid rgba(138, 163, 150, 0.3)',
-                  paddingTop: '1em',
-                }}
-              >
-                We&rsquo;ve reserved {guest.seats} seats for you.
-              </p>
-            )}
           </div>
+
+          {/* Reserved seats note */}
+          {guest && guest.seats > 1 && (
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '0.82rem',
+              fontStyle: 'normal',
+              letterSpacing: '0.06em',
+              color: 'var(--color-sage-400)',
+              margin: '1.4rem 0 0',
+              borderTop: '1px solid rgba(138, 163, 150, 0.25)',
+              paddingTop: '1.1rem',
+            }}>
+              We&rsquo;ve reserved {guest.seats} seats for you.
+            </p>
+          )}
 
           {/* No-param fallback: name input (hidden while loading token) */}
           {!displayName && !loading && (
             <div style={{ marginTop: '1.5rem' }}>
-              <label
-                htmlFor="guest-name-input"
-                style={{
-                  display: 'block',
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-sage-400)',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                Your name
-              </label>
               <div style={{ display: 'flex', gap: '0.6rem' }}>
                 <input
                   id="guest-name-input"
@@ -180,6 +199,7 @@ export function Invitation() {
                     borderRadius: '12px',
                     padding: '0.65rem 0.9rem',
                     outline: 'none',
+                    textAlign: 'left',
                   }}
                 />
                 <button
@@ -206,16 +226,13 @@ export function Invitation() {
           )}
 
           {/* Signature */}
-          <p
-            style={{
-              fontFamily: 'var(--font-script)',
-              fontSize: 'clamp(1.4rem, 5vw, 2rem)',
-              color: 'var(--color-gold-500)',
-              margin: '1.8rem 0 0',
-              textAlign: 'right',
-              lineHeight: 1,
-            }}
-          >
+          <p style={{
+            fontFamily: 'var(--font-script)',
+            fontSize: 'clamp(1.5rem, 5.5vw, 2.2rem)',
+            color: 'var(--color-gold-500)',
+            margin: '1.8rem 0 0',
+            lineHeight: 1,
+          }}>
             Mandakini &amp; Lakshitha
           </p>
         </GlassPanel>
