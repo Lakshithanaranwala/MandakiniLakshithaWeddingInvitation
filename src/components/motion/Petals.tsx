@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const COUNT = 28;
+const COUNT          = 28;
+const REPEL_RADIUS   = 180;  // px — interaction field radius
+const REPEL_STRENGTH = 1.8;  // push force magnitude
+const MAX_VX         = 3;    // horizontal velocity cap
+const MAX_VY_UP      = 2.5;  // max upward speed (negative vy)
+const MAX_VY_DOWN    = 4;    // max downward speed
 
 // Color palette: white → cream → blush → soft rose
 const COLORS: [number, number, number][] = [
@@ -22,7 +27,8 @@ interface Petal {
   rotation: number;    // radians
   rotSpeed: number;    // radians / frame
   vy: number;          // vertical speed
-  vx: number;          // base horizontal drift
+  vx: number;          // current horizontal velocity
+  baseVx: number;      // original drift to return to
   sway: number;        // current phase
   swaySpeed: number;   // radians / frame
   swayAmp: number;     // px peak sway
@@ -31,14 +37,17 @@ interface Petal {
 }
 
 function makePetal(vw: number, vh: number, scattered: boolean): Petal {
+  const vx = (Math.random() - 0.5) * 0.3;
+  const vy = 0.35 + Math.random() * 0.7;
   return {
     x:         Math.random() * vw,
     y:         scattered ? Math.random() * vh : -(8 + Math.random() * 20),
     size:      7 + Math.random() * 11,           // 7 – 18 px
     rotation:  Math.random() * Math.PI * 2,
     rotSpeed:  (Math.random() - 0.5) * 0.045,
-    vy:        0.35 + Math.random() * 0.7,        // gentle fall speed
-    vx:        (Math.random() - 0.5) * 0.3,       // slight horizontal bias
+    vy,
+    vx,
+    baseVx:    vx,
     sway:      Math.random() * Math.PI * 2,
     swaySpeed: 0.007 + Math.random() * 0.013,
     swayAmp:   0.6 + Math.random() * 1.8,
@@ -112,6 +121,9 @@ export function Petals() {
       ctx!.clearRect(0, 0, vw, vh);
 
       for (const p of petals) {
+        // Return horizontal drift to original — gravity handles vertical naturally
+        p.vx += (p.baseVx - p.vx) * 0.30;
+
         // Wind sway
         p.sway += p.swaySpeed;
         p.x    += p.vx + Math.sin(p.sway) * p.swayAmp;
@@ -140,6 +152,50 @@ export function Petals() {
 
     tick();
 
+    // ── Repulsion interaction ──────────────────────────────────────────────────
+
+    function applyRepulsion(clientX: number, clientY: number) {
+      const rect = canvas!.getBoundingClientRect();
+      const cx = clientX - rect.left;
+      const cy = clientY - rect.top;
+
+      for (const p of petals) {
+        const dx = p.x - cx;
+        const dy = p.y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist === 0 || dist > REPEL_RADIUS) continue;
+
+        // Force falls off with distance (stronger when closer)
+        const force = (1 - dist / REPEL_RADIUS) * REPEL_STRENGTH;
+        const nx = dx / dist;  // unit vector away from cursor
+        const ny = dy / dist;
+
+        p.vx = Math.max(-MAX_VX, Math.min(MAX_VX, p.vx + nx * force));
+        p.vy = Math.max(-MAX_VY_UP, Math.min(MAX_VY_DOWN, p.vy + ny * force));
+      }
+    }
+
+    let pressing = false;
+
+    function onMouseDown(e: MouseEvent) { pressing = true; applyRepulsion(e.clientX, e.clientY); }
+    function onMouseMove(e: MouseEvent) { if (pressing) applyRepulsion(e.clientX, e.clientY); }
+    function onMouseUp()                { pressing = false; }
+
+    function onTouchStart(e: TouchEvent) {
+      const t = e.touches[0];
+      if (t) applyRepulsion(t.clientX, t.clientY);
+    }
+    function onTouchMove(e: TouchEvent) {
+      const t = e.touches[0];
+      if (t) applyRepulsion(t.clientX, t.clientY);
+    }
+
+    window.addEventListener('mousedown',  onMouseDown,  { passive: true });
+    window.addEventListener('mousemove',  onMouseMove,  { passive: true });
+    window.addEventListener('mouseup',    onMouseUp,    { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove',  onTouchMove,  { passive: true });
+
     function onResize() {
       if (!canvas) return;
       vw = canvas.offsetWidth;
@@ -152,7 +208,12 @@ export function Petals() {
 
     return () => {
       cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('mousedown',  onMouseDown);
+      window.removeEventListener('mousemove',  onMouseMove);
+      window.removeEventListener('mouseup',    onMouseUp);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove',  onTouchMove);
+      window.removeEventListener('resize',     onResize);
     };
   }, []);
 

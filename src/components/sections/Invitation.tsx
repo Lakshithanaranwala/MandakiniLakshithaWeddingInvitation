@@ -43,7 +43,7 @@ export function Invitation() {
         alignItems: 'center',
         
         justifyContent: 'center',
-        paddingTop: 'clamp(15rem, 15vh, 8rem)',
+        paddingTop: 0,
         position: 'relative',
         overflow: 'hidden',
       }}
