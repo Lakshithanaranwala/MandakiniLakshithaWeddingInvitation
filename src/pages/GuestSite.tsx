@@ -4,8 +4,9 @@ import { Splash }      from '../components/sections/Splash';
 import { SaveTheDate } from '../components/sections/SaveTheDate';
 import { Invitation }  from '../components/sections/Invitation';
 import { Details }     from '../components/sections/Details';
-import { RsvpDock }    from '../components/rsvp/RsvpDock';
-import { RsvpSheet }   from '../components/rsvp/RsvpSheet';
+import { RsvpDock }          from '../components/rsvp/RsvpDock';
+import { RsvpSheet }         from '../components/rsvp/RsvpSheet';
+import { ScrollProgressBar } from '../components/ScrollProgressBar';
 import { GuestContext, type Guest } from '../hooks/useGuest';
 import { supabase } from '../lib/supabase';
 
@@ -54,6 +55,7 @@ export function GuestSite() {
         disabled={rsvpOpen}
         overlay={
           <>
+            <ScrollProgressBar />
             <RsvpDock onOpen={() => setRsvpOpen(true)} sheetOpen={rsvpOpen} />
             <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
           </>
