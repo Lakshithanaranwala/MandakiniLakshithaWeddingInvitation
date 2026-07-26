@@ -132,10 +132,10 @@ export function Details() {
         >
           <CardHeading>Where</CardHeading>
           <CardBody>
-            <p style={{ margin: '0 0 0.25em', fontWeight: 500 }}>
+            <p style={{ margin: '0 0 0.25em', fontWeight: 500, color: '#000' }}>
               Mandakini Club House
             </p>
-            <p style={{ margin: 0, color: 'var(--color-sage-400)' }}>
+            <p style={{ margin: 0, color: '#000' }}>
               Divulapitiya, Sri Lanka
             </p>
           </CardBody>

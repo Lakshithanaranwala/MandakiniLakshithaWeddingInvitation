@@ -5,7 +5,7 @@ export function ScrollProgressBar() {
   const { currentIndex, total } = useSwiper();
 
   const progress = total > 1 ? currentIndex / (total - 1) : 0;
-  const visible  = currentIndex > 0;
+  const visible  = currentIndex === total - 1;
 
   return (
     <AnimatePresence>

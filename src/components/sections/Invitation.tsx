@@ -42,7 +42,8 @@ export function Invitation() {
         flexDirection: 'column',
         alignItems: 'center',
         
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
+        paddingBottom: 'clamp(6rem, 18vh, 12rem)',
         paddingTop: 0,
         position: 'relative',
         overflow: 'hidden',
