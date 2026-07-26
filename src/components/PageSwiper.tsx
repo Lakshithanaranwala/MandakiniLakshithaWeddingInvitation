@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import type { PullToRefreshHandle } from './PullToRefreshIndicator';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -7,6 +8,7 @@ const SNAP_VELOCITY = 0.35;  // px/ms — fast flick threshold
 const RUBBER_BAND   = 0.20;  // 20% resistance at edges
 const ANIM_MS       = 420;   // snap animation duration
 const EASING        = 'cubic-bezier(0.25, 1, 0.5, 1)';
+const PTR_THRESHOLD = 120;   // px raw drag to trigger pull-to-refresh
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -20,10 +22,14 @@ export function PageSwiper({
   children,
   overlay,
   disabled = false,
+  onPullToRefresh,
+  pullIndicatorRef,
 }: {
   children: React.ReactNode[];
   overlay?: React.ReactNode;
   disabled?: boolean;
+  onPullToRefresh?: () => void;
+  pullIndicatorRef?: React.RefObject<PullToRefreshHandle | null>;
 }) {
   const total   = children.length;
   const lastIdx = total - 1;
@@ -41,6 +47,13 @@ export function PageSwiper({
   const delta        = useRef(0);    // current drag offset in px
   const stripRef     = useRef<HTMLDivElement>(null);
   const lastPanelRef = useRef<HTMLDivElement>(null);
+  const ptrTriggered = useRef(false);
+
+  // Keep stable refs to callbacks so the effect doesn't need to re-run
+  const onPullToRefreshRef  = useRef(onPullToRefresh);
+  const pullIndicatorRefRef = useRef(pullIndicatorRef);
+  useEffect(() => { onPullToRefreshRef.current  = onPullToRefresh;  }, [onPullToRefresh]);
+  useEffect(() => { pullIndicatorRefRef.current = pullIndicatorRef; }, [pullIndicatorRef]);
 
   useEffect(() => {
     // ── DOM helpers ────────────────────────────────────────────────────────
@@ -99,6 +112,22 @@ export function PageSwiper({
 
       delta.current = d;
       applyTransform(currentRef.current, d, false);
+
+      // Pull-to-refresh indicator — only on page 0 dragging down
+      const indicator = pullIndicatorRefRef.current?.current;
+      if (indicator && currentRef.current === 0) {
+        const rawDelta = clientY - startY.current;
+        if (rawDelta > 0) {
+          const progress = rawDelta / PTR_THRESHOLD;
+          if (!ptrTriggered.current && rawDelta >= PTR_THRESHOLD) {
+            ptrTriggered.current = true;
+            navigator.vibrate?.([12]);
+          }
+          indicator.update(progress, ptrTriggered.current);
+        } else {
+          indicator.update(0, false);
+        }
+      }
     }
 
     // ── Drag end ───────────────────────────────────────────────────────────
@@ -106,6 +135,17 @@ export function PageSwiper({
     function onEnd() {
       if (!dragging.current) return;
       dragging.current = false;
+
+      // Pull-to-refresh: reset indicator and fire callback if triggered
+      const indicator = pullIndicatorRefRef.current?.current;
+      if (indicator) indicator.reset();
+      if (ptrTriggered.current) {
+        ptrTriggered.current = false;
+        onPullToRefreshRef.current?.();
+        snapTo(currentRef.current);
+        return;
+      }
+      ptrTriggered.current = false;
 
       const d  = delta.current;
       const v  = vel.current;

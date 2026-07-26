@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PageSwiper }  from '../components/PageSwiper';
 import { Splash }      from '../components/sections/Splash';
 import { SaveTheDate } from '../components/sections/SaveTheDate';
@@ -6,7 +6,8 @@ import { Invitation }  from '../components/sections/Invitation';
 import { Details }     from '../components/sections/Details';
 import { RsvpDock }          from '../components/rsvp/RsvpDock';
 import { RsvpSheet }         from '../components/rsvp/RsvpSheet';
-import { ScrollProgressBar } from '../components/ScrollProgressBar';
+import { ScrollProgressBar }    from '../components/ScrollProgressBar';
+import { PullToRefreshIndicator, type PullToRefreshHandle } from '../components/PullToRefreshIndicator';
 import { GuestContext, type Guest } from '../hooks/useGuest';
 import { supabase } from '../lib/supabase';
 
@@ -48,13 +49,17 @@ function GuestProvider({ children }: { children: React.ReactNode }) {
 
 export function GuestSite() {
   const [rsvpOpen, setRsvpOpen] = useState(false);
+  const ptrRef = useRef<PullToRefreshHandle>(null);
 
   return (
     <GuestProvider>
       <PageSwiper
         disabled={rsvpOpen}
+        pullIndicatorRef={ptrRef}
+        onPullToRefresh={() => window.location.reload()}
         overlay={
           <>
+            <PullToRefreshIndicator ref={ptrRef} />
             <ScrollProgressBar />
             <RsvpDock onOpen={() => setRsvpOpen(true)} sheetOpen={rsvpOpen} />
             <RsvpSheet isOpen={rsvpOpen} onClose={() => setRsvpOpen(false)} />
