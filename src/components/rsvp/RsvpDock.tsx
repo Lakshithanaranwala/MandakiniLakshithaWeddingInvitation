@@ -9,7 +9,7 @@ interface RsvpDockProps {
 
 export function RsvpDock({ onOpen, sheetOpen }: RsvpDockProps) {
   const { currentIndex } = useSwiper();
-  const visible = currentIndex > 0 && !sheetOpen;
+  const visible = currentIndex > 1 && !sheetOpen;
 
   return (
     <AnimatePresence>
