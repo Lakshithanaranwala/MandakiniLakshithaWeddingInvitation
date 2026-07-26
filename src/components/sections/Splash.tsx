@@ -76,6 +76,7 @@ export function Splash() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-end',
+        paddingBottom: 'clamp(3rem, 8vh, 6rem)',
       }}
     >
       {/* ── Background photo ─────────────────────────────────────────────── */}
