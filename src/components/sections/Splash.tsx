@@ -75,7 +75,7 @@ export function Splash() {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
       }}
     >
       {/* ── Background photo ─────────────────────────────────────────────── */}
