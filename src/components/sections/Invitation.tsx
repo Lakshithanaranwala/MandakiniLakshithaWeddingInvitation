@@ -242,7 +242,9 @@ export function Invitation() {
             paddingTop: '1.1rem',
             lineHeight: 1.6,
           }}>
-            We would truly appreciate it if you could kindly RSVP by 21st August, 2026
+            We would truly appreciate it if you could kindly RSVP by
+            <br />
+            21st August, 2026
           </p>
         </GlassPanel>
       </Reveal>
