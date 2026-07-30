@@ -24,9 +24,7 @@ function buildWhatsAppUrl(guest: GuestRow): string {
     `Mandakini & Lakshitha`
   ].join('\n');
   const phone = guest.phone.replace(/\D/g, '');
-  const url   = new URL(`https://wa.me/${phone}`);
-  url.searchParams.set('text', msg);
-  return url.toString();
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
 
 export function AdminDashboard() {
