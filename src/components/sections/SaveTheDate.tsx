@@ -146,7 +146,7 @@ export function SaveTheDate() {
           alignItems: 'center',
           gap: 'clamp(0.6rem, 2vw, 1rem)',
           padding: '0 clamp(1.5rem, 5vw, 2.5rem)',
-          marginBottom: '120px',
+          marginBottom: '60px',
         }}
       >
         {/* Save the Date heading */}
