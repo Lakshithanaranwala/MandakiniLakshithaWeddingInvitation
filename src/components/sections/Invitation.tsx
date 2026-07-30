@@ -163,6 +163,21 @@ export function Invitation() {
             </p>
           </div>
 
+          {/* RSVP request */}
+          <p style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: 'clamp(0.7rem, 2.5vw, 0.82rem)',
+            fontStyle: 'normal',
+            letterSpacing: '0.04em',
+            color: 'var(--color-sage-400)',
+            margin: '1.4rem 0 0',
+            borderTop: '1px solid rgba(138, 163, 150, 0.25)',
+            paddingTop: '1.1rem',
+            lineHeight: 1.6,
+          }}>
+            We would truly appreciate it if you could kindly RSVP by 21st August, 2026
+          </p>
+
           {/* Reserved seats note */}
           {guest && guest.seats > 1 && (
             <p style={{
