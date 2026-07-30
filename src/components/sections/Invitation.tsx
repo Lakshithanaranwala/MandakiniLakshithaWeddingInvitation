@@ -137,14 +137,7 @@ export function Invitation() {
             </p>
           )}
 
-          {/* Divider */}
-          <div style={{
-            width: 'clamp(2.5rem, 10vw, 4rem)',
-            height: '1px',
-            background: 'var(--color-gold-500)',
-            opacity: 0.4,
-            margin: '0 auto 1.5rem',
-          }} />
+        
 
           {/* Body text */}
           <div style={{
@@ -156,27 +149,12 @@ export function Invitation() {
             lineHeight: 1.75,
           }}>
             <p style={{ margin: '0 0 0.9em' }}>
-              Together with our families, we invite you to share in the joy of our wedding.
+              Together with our families, we invite you to share in the joy of our wedding. 
             </p>
             <p style={{ margin: 0 }}>
-              Your presence is the greatest gift.
+              
             </p>
           </div>
-
-          {/* RSVP request */}
-          <p style={{
-            fontFamily: 'var(--font-ui)',
-            fontSize: 'clamp(0.7rem, 2.5vw, 0.82rem)',
-            fontStyle: 'normal',
-            letterSpacing: '0.04em',
-            color: 'var(--color-sage-400)',
-            margin: '1.4rem 0 0',
-            borderTop: '1px solid rgba(138, 163, 150, 0.25)',
-            paddingTop: '1.1rem',
-            lineHeight: 1.6,
-          }}>
-            We would truly appreciate it if you could kindly RSVP by 21st August, 2026
-          </p>
 
           {/* Reserved seats note */}
           {guest && guest.seats > 1 && (
@@ -250,6 +228,21 @@ export function Invitation() {
             lineHeight: 1,
           }}>
             Mandakini &amp; Lakshitha
+          </p>
+
+          {/* RSVP request */}
+          <p style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: 'clamp(0.7rem, 2.5vw, 0.82rem)',
+            fontStyle: 'normal',
+            letterSpacing: '0.04em',
+            color: 'var(--color-sage-400)',
+            margin: '1.4rem 0 0',
+            borderTop: '1px solid rgba(138, 163, 150, 0.25)',
+            paddingTop: '1.1rem',
+            lineHeight: 1.6,
+          }}>
+            We would truly appreciate it if you could kindly RSVP by 21st August, 2026
           </p>
         </GlassPanel>
       </Reveal>

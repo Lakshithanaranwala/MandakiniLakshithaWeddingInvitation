@@ -99,7 +99,7 @@ export function Details() {
         >
           <CardHeading>When</CardHeading>
           <CardBody>
-            <p style={{ margin: '0 0 0.3em', fontWeight: 500 }}>
+            <p style={{ margin: '0 0 0.3em', fontWeight: 500, fontSize: 'clamp(1.3rem, 5vw, 1.7rem)' }}>
               Friday, 11 September 2026
             </p>
             <Divider />
@@ -132,7 +132,7 @@ export function Details() {
         >
           <CardHeading>Where</CardHeading>
           <CardBody>
-            <p style={{ margin: '0 0 0.25em', fontWeight: 500, color: '#000' }}>
+            <p style={{ margin: '0 0 0.25em', fontWeight: 500, color: '#000', fontSize: 'clamp(1.3rem, 5vw, 1.7rem)' }}>
               Mandakini Club House
             </p>
             <p style={{ margin: 0, color: '#000' }}>
