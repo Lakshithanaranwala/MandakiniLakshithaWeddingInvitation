@@ -115,7 +115,7 @@ export function SaveTheDate() {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
       }}
     >
       {/* Background */}
@@ -146,7 +146,7 @@ export function SaveTheDate() {
           alignItems: 'center',
           gap: 'clamp(0.6rem, 2vw, 1rem)',
           padding: '0 clamp(1.5rem, 5vw, 2.5rem)',
-          marginTop: 'clamp(12rem, 42vh, 24rem)',
+          marginBottom: '120px',
         }}
       >
         {/* Save the Date heading */}
