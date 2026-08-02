@@ -38,7 +38,14 @@ export function AdminDashboard() {
   const [filter,  setFilter]  = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
 
   // Guest detail modal
-  const [selectedGuest, setSelectedGuest] = useState<GuestRow | null>(null);
+  const [selectedGuest,    setSelectedGuest]    = useState<GuestRow | null>(null);
+  const [showRsvpForm,     setShowRsvpForm]     = useState(false);
+  const [manualAttendance, setManualAttendance] = useState<'accept' | 'decline'>('accept');
+  const [manualSeatCount,  setManualSeatCount]  = useState(1);
+  const [manualMessage,    setManualMessage]    = useState('');
+  const [manualPassword,   setManualPassword]   = useState('');
+  const [manualError,      setManualError]      = useState('');
+  const [manualSaving,     setManualSaving]     = useState(false);
 
   // RSVP detail modal
   const [selectedRsvp,    setSelectedRsvp]    = useState<RsvpRow | null>(null);
@@ -111,6 +118,44 @@ export function AdminDashboard() {
     setDeleteRsvpTarget(null);
     setDeleteRsvpPassword('');
     setDeleteRsvpError('');
+    load();
+  }
+
+  function openGuestModal(g: GuestRow) {
+    const existingRsvp = rsvpByGuest.get(g.id);
+    setSelectedGuest(g);
+    setShowRsvpForm(false);
+    setManualAttendance(existingRsvp?.attendance ?? 'accept');
+    setManualSeatCount(existingRsvp?.guest_count ?? g.seats);
+    setManualMessage(existingRsvp?.message ?? '');
+    setManualPassword('');
+    setManualError('');
+  }
+
+  async function submitManualRsvp() {
+    if (!selectedGuest) return;
+    if (manualPassword !== import.meta.env.VITE_ADMIN_PASSWORD) {
+      setManualError('Incorrect password.');
+      return;
+    }
+    setManualSaving(true);
+    const existingRsvp = rsvpByGuest.get(selectedGuest.id);
+    const payload = {
+      guest_id:    selectedGuest.id,
+      name:        selectedGuest.name,
+      attendance:  manualAttendance,
+      guest_count: manualAttendance === 'accept' ? manualSeatCount : null,
+      message:     manualMessage.trim() || null,
+      submitted_at: new Date().toISOString(),
+    };
+    if (existingRsvp) {
+      await supabase.from('rsvps').update(payload).eq('id', existingRsvp.id);
+    } else {
+      await supabase.from('rsvps').insert(payload);
+    }
+    setManualSaving(false);
+    setSelectedGuest(null);
+    setShowRsvpForm(false);
     load();
   }
 
@@ -368,7 +413,7 @@ export function AdminDashboard() {
                   {filteredGuests.map((g, i) => {
                     const rsvp = rsvpByGuest.get(g.id);
                     return (
-                      <tr key={g.id} onClick={() => setSelectedGuest(g)} style={{ background: i % 2 === 0 ? 'white' : '#faf8f4', cursor: 'pointer' }}>
+                      <tr key={g.id} onClick={() => openGuestModal(g)} style={{ background: i % 2 === 0 ? 'white' : '#faf8f4', cursor: 'pointer' }}>
                         <td style={tdStyle}><strong>{g.name}</strong></td>
                         <td style={{ ...tdStyle, color: '#888' }}>{g.phone}</td>
                         <td style={{ ...tdStyle, textAlign: 'center' }}>{g.seats}</td>
@@ -530,7 +575,7 @@ export function AdminDashboard() {
         const link = `${SITE_URL}/?guest=${g.token}`;
         return (
           <div
-            onClick={() => setSelectedGuest(null)}
+            onClick={() => { setSelectedGuest(null); setShowRsvpForm(false); }}
             style={{
               position: 'fixed',
               inset: 0,
@@ -577,7 +622,7 @@ export function AdminDashboard() {
                     <span style={{ fontSize: '0.72rem', color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Pending</span>
                   )}
                 </div>
-                <button onClick={() => setSelectedGuest(null)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', color: '#bbb', cursor: 'pointer', lineHeight: 1, padding: '0 0.2rem' }}>×</button>
+                <button onClick={() => { setSelectedGuest(null); setShowRsvpForm(false); }} style={{ background: 'none', border: 'none', fontSize: '1.4rem', color: '#bbb', cursor: 'pointer', lineHeight: 1, padding: '0 0.2rem' }}>×</button>
               </div>
 
               {/* Details grid */}
@@ -629,35 +674,128 @@ export function AdminDashboard() {
                 </button>
               </div>
 
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <a
-                  href={buildWhatsAppUrl(g)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ flex: 1, ...waBtn, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', padding: '0.75rem', fontSize: '0.78rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}
-                >
-                  WhatsApp
-                </a>
-                <button
-                  onClick={() => setSelectedGuest(null)}
-                  style={{
-                    flex: 1,
-                    fontFamily: 'var(--font-ui)',
-                    fontSize: '0.78rem',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    background: '#f0ece6',
-                    color: '#555',
-                    border: 'none',
-                    borderRadius: '10px',
-                    padding: '0.75rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Close
-                </button>
-              </div>
+              {/* Manual RSVP form */}
+              {showRsvpForm ? (
+                <div style={{ borderTop: '1px solid #f0ece6', paddingTop: '1.25rem', marginTop: '0.25rem' }}>
+                  <p style={{ ...modalLabel, marginBottom: '0.85rem' }}>Manual RSVP</p>
+
+                  {/* Attendance toggle */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                    {(['accept', 'decline'] as const).map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => setManualAttendance(opt)}
+                        style={{
+                          flex: 1,
+                          fontFamily: 'var(--font-ui)',
+                          fontSize: '0.72rem',
+                          fontWeight: 500,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          border: '2px solid',
+                          borderRadius: '8px',
+                          padding: '0.55rem',
+                          cursor: 'pointer',
+                          borderColor: manualAttendance === opt
+                            ? (opt === 'accept' ? '#2e7d32' : '#b71c1c')
+                            : '#e8e4de',
+                          background: manualAttendance === opt
+                            ? (opt === 'accept' ? '#e8f5e9' : '#fdecea')
+                            : 'white',
+                          color: manualAttendance === opt
+                            ? (opt === 'accept' ? '#2e7d32' : '#b71c1c')
+                            : '#aaa',
+                        }}
+                      >
+                        {opt === 'accept' ? 'Accept' : 'Decline'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Seat count — only when accepting */}
+                  {manualAttendance === 'accept' && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={labelStyle}>Confirmed seats</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.35rem' }}>
+                        <button onClick={() => setManualSeatCount((n) => Math.max(1, n - 1))} style={stepBtn}>−</button>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: '#222', minWidth: '2rem', textAlign: 'center', lineHeight: 1 }}>
+                          {manualSeatCount}
+                        </span>
+                        <button onClick={() => setManualSeatCount((n) => n + 1)} style={stepBtn}>+</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Message */}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={labelStyle}>Message (optional)</label>
+                    <textarea
+                      value={manualMessage}
+                      onChange={(e) => setManualMessage(e.target.value)}
+                      placeholder="Any notes from the guest…"
+                      rows={2}
+                      style={{ ...inputStyle, resize: 'vertical' }}
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <label style={labelStyle}>Admin password</label>
+                    <input
+                      type="password"
+                      value={manualPassword}
+                      onChange={(e) => { setManualPassword(e.target.value); setManualError(''); }}
+                      onKeyDown={(e) => e.key === 'Enter' && submitManualRsvp()}
+                      placeholder="Enter your password"
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  {manualError && (
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#b71c1c', margin: '0 0 0.75rem' }}>{manualError}</p>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                      onClick={() => { setShowRsvpForm(false); setManualError(''); }}
+                      style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#f0ece6', color: '#555', border: 'none', borderRadius: '10px', padding: '0.75rem', cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitManualRsvp}
+                      disabled={manualSaving}
+                      style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--color-forest-700)', color: 'white', border: 'none', borderRadius: '10px', padding: '0.75rem', cursor: manualSaving ? 'not-allowed' : 'pointer', opacity: manualSaving ? 0.7 : 1 }}
+                    >
+                      {manualSaving ? 'Saving…' : (rsvp ? 'Update RSVP' : 'Submit RSVP')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Actions */
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <a
+                    href={buildWhatsAppUrl(g)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ flex: 1, ...waBtn, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', padding: '0.75rem', fontSize: '0.78rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}
+                  >
+                    WhatsApp
+                  </a>
+                  <button
+                    onClick={() => setShowRsvpForm(true)}
+                    style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--color-forest-700)', color: 'white', border: 'none', borderRadius: '10px', padding: '0.75rem', cursor: 'pointer' }}
+                  >
+                    {rsvp ? 'Edit RSVP' : 'RSVP'}
+                  </button>
+                  <button
+                    onClick={() => setSelectedGuest(null)}
+                    style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#f0ece6', color: '#555', border: 'none', borderRadius: '10px', padding: '0.75rem', cursor: 'pointer' }}
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
