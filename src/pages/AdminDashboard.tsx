@@ -53,6 +53,12 @@ export function AdminDashboard() {
   const [editGuestCount,  setEditGuestCount]  = useState<number>(1);
   const [saving,          setSaving]          = useState(false);
 
+  // Delete guest confirmation
+  const [deleteGuestTarget,   setDeleteGuestTarget]   = useState<GuestRow | null>(null);
+  const [deleteGuestPassword, setDeleteGuestPassword] = useState('');
+  const [deleteGuestError,    setDeleteGuestError]    = useState('');
+  const [deletingGuest,       setDeletingGuest]       = useState(false);
+
   // Delete RSVP confirmation
   const [deleteRsvpTarget,   setDeleteRsvpTarget]   = useState<RsvpRow | null>(null);
   const [deleteRsvpPassword, setDeleteRsvpPassword] = useState('');
@@ -101,9 +107,18 @@ export function AdminDashboard() {
     load();
   }
 
-  async function deleteGuest(id: string, name: string) {
-    if (!confirm(`Remove ${name} from the guest list?`)) return;
-    await supabase.from('guests').delete().eq('id', id);
+  async function confirmDeleteGuest() {
+    if (!deleteGuestTarget) return;
+    if (deleteGuestPassword !== import.meta.env.VITE_ADMIN_PASSWORD) {
+      setDeleteGuestError('Incorrect password.');
+      return;
+    }
+    setDeletingGuest(true);
+    await supabase.from('guests').delete().eq('id', deleteGuestTarget.id);
+    setDeletingGuest(false);
+    setDeleteGuestTarget(null);
+    setDeleteGuestPassword('');
+    setDeleteGuestError('');
     load();
   }
 
@@ -497,7 +512,7 @@ export function AdminDashboard() {
                             {copied === g.token ? 'Copied!' : 'Copy link'}
                           </button>
                           <button
-                            onClick={() => deleteGuest(g.id, g.name)}
+                            onClick={() => { setDeleteGuestTarget(g); setDeleteGuestPassword(''); setDeleteGuestError(''); }}
                             style={delBtn}
                             aria-label={`Remove ${g.name}`}
                           >
@@ -958,6 +973,66 @@ export function AdminDashboard() {
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Guest Confirmation Modal ── */}
+      {deleteGuestTarget && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1.5rem',
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '18px',
+            padding: '2rem',
+            width: '100%',
+            maxWidth: '380px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '1rem', fontWeight: 600, color: '#b71c1c', margin: '0 0 0.5rem' }}>
+              Remove Guest
+            </h2>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', color: '#666', margin: '0 0 1.5rem', lineHeight: 1.5 }}>
+              Remove <strong>{deleteGuestTarget.name}</strong> from the guest list? Enter your password to confirm.
+            </p>
+            <label style={labelStyle}>Password</label>
+            <input
+              type="password"
+              value={deleteGuestPassword}
+              onChange={(e) => { setDeleteGuestPassword(e.target.value); setDeleteGuestError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && confirmDeleteGuest()}
+              autoFocus
+              placeholder="Enter your password"
+              style={{ ...inputStyle, marginBottom: '0.75rem' }}
+            />
+            {deleteGuestError && (
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#b71c1c', margin: '0 0 0.75rem' }}>
+                {deleteGuestError}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => { setDeleteGuestTarget(null); setDeleteGuestPassword(''); setDeleteGuestError(''); }}
+                style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', letterSpacing: '0.1em', textTransform: 'uppercase', background: '#f0ece6', color: '#555', border: 'none', borderRadius: '10px', padding: '0.75rem', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteGuest}
+                disabled={deletingGuest}
+                style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', background: '#b71c1c', color: 'white', border: 'none', borderRadius: '10px', padding: '0.75rem', cursor: deletingGuest ? 'not-allowed' : 'pointer', opacity: deletingGuest ? 0.7 : 1 }}
+              >
+                {deletingGuest ? 'Removing…' : 'Remove'}
+              </button>
             </div>
           </div>
         </div>
