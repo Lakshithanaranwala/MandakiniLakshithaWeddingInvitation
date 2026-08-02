@@ -85,6 +85,12 @@ export function AdminDashboard() {
     load();
   }
 
+  async function deleteRsvp(id: string, name: string) {
+    if (!confirm(`Remove RSVP response from ${name}?`)) return;
+    await supabase.from('rsvps').delete().eq('id', id);
+    load();
+  }
+
   async function hardReset() {
     const validPass = import.meta.env.VITE_ADMIN_PASSWORD;
     if (resetPassword !== validPass) {
@@ -402,7 +408,7 @@ export function AdminDashboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr>
-                    {['Name', 'Attendance', 'Allocated', 'Confirmed', 'Message', 'Date'].map((h) => (
+                    {['Name', 'Attendance', 'Allocated', 'Confirmed', 'Message', 'Date', ''].map((h) => (
                       <th key={h} style={thStyle}>{h}</th>
                     ))}
                   </tr>
@@ -450,6 +456,15 @@ export function AdminDashboard() {
                         {new Date(r.submitted_at).toLocaleDateString('en-GB', {
                           day: 'numeric', month: 'short', year: 'numeric',
                         })}
+                      </td>
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                        <button
+                          onClick={() => deleteRsvp(r.id, r.name)}
+                          style={delBtn}
+                          aria-label={`Remove RSVP from ${r.name}`}
+                        >
+                          ×
+                        </button>
                       </td>
                     </tr>
                   ))}
