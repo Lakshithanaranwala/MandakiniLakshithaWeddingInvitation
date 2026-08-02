@@ -37,6 +37,11 @@ export function AdminDashboard() {
   const [copied,  setCopied]  = useState<string | null>(null);
   const [filter,  setFilter]  = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
 
+  // RSVP detail modal
+  const [selectedRsvp,    setSelectedRsvp]    = useState<RsvpRow | null>(null);
+  const [editGuestCount,  setEditGuestCount]  = useState<number>(1);
+  const [saving,          setSaving]          = useState(false);
+
   // Hard reset
   const [resetOpen,     setResetOpen]     = useState(false);
   const [resetPassword, setResetPassword] = useState('');
@@ -88,6 +93,25 @@ export function AdminDashboard() {
   async function deleteRsvp(id: string, name: string) {
     if (!confirm(`Remove RSVP response from ${name}?`)) return;
     await supabase.from('rsvps').delete().eq('id', id);
+    load();
+  }
+
+  function openRsvpModal(r: RsvpRow) {
+    setSelectedRsvp(r);
+    setEditGuestCount(r.guest_count ?? 1);
+  }
+
+  function closeRsvpModal() {
+    setSelectedRsvp(null);
+    setSaving(false);
+  }
+
+  async function saveGuestCount() {
+    if (!selectedRsvp) return;
+    setSaving(true);
+    await supabase.from('rsvps').update({ guest_count: editGuestCount }).eq('id', selectedRsvp.id);
+    setSaving(false);
+    closeRsvpModal();
     load();
   }
 
@@ -415,7 +439,11 @@ export function AdminDashboard() {
                 </thead>
                 <tbody>
                   {rsvps.map((r, i) => (
-                    <tr key={r.id} style={{ background: i % 2 === 0 ? 'white' : '#faf8f4' }}>
+                    <tr
+                      key={r.id}
+                      onClick={() => openRsvpModal(r)}
+                      style={{ background: i % 2 === 0 ? 'white' : '#faf8f4', cursor: 'pointer' }}
+                    >
                       <td style={tdStyle}><strong>{r.name}</strong></td>
                       <td style={tdStyle}>
                         <span style={{
@@ -457,7 +485,7 @@ export function AdminDashboard() {
                           day: 'numeric', month: 'short', year: 'numeric',
                         })}
                       </td>
-                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => deleteRsvp(r.id, r.name)}
                           style={delBtn}
@@ -475,6 +503,138 @@ export function AdminDashboard() {
         </section>
 
       </main>
+
+      {/* ── RSVP Detail Modal ── */}
+      {selectedRsvp && (
+        <div
+          onClick={closeRsvpModal}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999,
+            padding: '1.5rem',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '18px',
+              padding: '2rem',
+              width: '100%',
+              maxWidth: '420px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.1rem', fontWeight: 700, color: '#222', margin: '0 0 0.25rem' }}>
+                  {selectedRsvp.name}
+                </h2>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '0.2rem 0.65rem',
+                  borderRadius: '999px',
+                  fontSize: '0.68rem',
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  background: selectedRsvp.attendance === 'accept' ? '#e8f5e9' : '#fdecea',
+                  color:      selectedRsvp.attendance === 'accept' ? '#2e7d32' : '#b71c1c',
+                }}>
+                  {selectedRsvp.attendance === 'accept' ? 'Accepted' : 'Declined'}
+                </span>
+              </div>
+              <button onClick={closeRsvpModal} style={{ background: 'none', border: 'none', fontSize: '1.4rem', color: '#bbb', cursor: 'pointer', lineHeight: 1, padding: '0 0.2rem' }}>×</button>
+            </div>
+
+            {/* Details grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <p style={modalLabel}>Allocated seats</p>
+                <p style={modalValue}>{guestById.get(selectedRsvp.guest_id ?? '')?.seats ?? '—'}</p>
+              </div>
+              <div>
+                <p style={modalLabel}>Submitted</p>
+                <p style={modalValue}>
+                  {new Date(selectedRsvp.submitted_at).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric',
+                  })}
+                </p>
+              </div>
+              {selectedRsvp.message && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <p style={modalLabel}>Message</p>
+                  <p style={{ ...modalValue, color: '#555', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{selectedRsvp.message}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Edit confirmed seats — only for accepted */}
+            {selectedRsvp.attendance === 'accept' && (
+              <div style={{ background: '#f8f6f2', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
+                <label style={labelStyle}>Confirmed seat count</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.35rem' }}>
+                  <button
+                    onClick={() => setEditGuestCount((n) => Math.max(1, n - 1))}
+                    style={{ ...stepBtn }}
+                  >−</button>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: '#222', minWidth: '2rem', textAlign: 'center', lineHeight: 1 }}>
+                    {editGuestCount}
+                  </span>
+                  <button
+                    onClick={() => setEditGuestCount((n) => n + 1)}
+                    style={{ ...stepBtn }}
+                  >+</button>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button onClick={closeRsvpModal} style={{
+                flex: 1,
+                fontFamily: 'var(--font-ui)',
+                fontSize: '0.78rem',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                background: '#f0ece6',
+                color: '#555',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '0.75rem',
+                cursor: 'pointer',
+              }}>
+                Cancel
+              </button>
+              {selectedRsvp.attendance === 'accept' && (
+                <button onClick={saveGuestCount} disabled={saving} style={{
+                  flex: 1,
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  background: 'var(--color-forest-700)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '0.75rem',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.7 : 1,
+                }}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hard Reset Modal ── */}
       {resetOpen && (
@@ -699,5 +859,39 @@ const delBtn: React.CSSProperties = {
   cursor: 'pointer',
   padding: '0.2rem 0.4rem',
   borderRadius: '4px',
+  lineHeight: 1,
+};
+
+const modalLabel: React.CSSProperties = {
+  fontFamily: 'var(--font-ui)',
+  fontSize: '0.58rem',
+  letterSpacing: '0.15em',
+  textTransform: 'uppercase',
+  color: '#aaa',
+  margin: '0 0 0.25rem',
+};
+
+const modalValue: React.CSSProperties = {
+  fontFamily: 'var(--font-ui)',
+  fontSize: '0.9rem',
+  color: '#222',
+  margin: 0,
+  fontWeight: 500,
+};
+
+const stepBtn: React.CSSProperties = {
+  fontFamily: 'var(--font-ui)',
+  fontSize: '1.2rem',
+  fontWeight: 600,
+  background: 'white',
+  color: 'var(--color-forest-700)',
+  border: '1px solid rgba(138,163,150,0.4)',
+  borderRadius: '8px',
+  width: '2.2rem',
+  height: '2.2rem',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   lineHeight: 1,
 };
