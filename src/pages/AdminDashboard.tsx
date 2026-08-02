@@ -35,7 +35,8 @@ export function AdminDashboard() {
   const [views,   setViews]   = useState<LinkViewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied,  setCopied]  = useState<string | null>(null);
-  const [filter,  setFilter]  = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
+  const [filter,     setFilter]     = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
+  const [activeTab,  setActiveTab]  = useState<'guests' | 'rsvps'>('guests');
 
   // Guest detail modal
   const [selectedGuest,    setSelectedGuest]    = useState<GuestRow | null>(null);
@@ -336,8 +337,37 @@ export function AdminDashboard() {
           })}
         </div>
 
+        {/* ── Tabs ── */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+          {([
+            { key: 'guests', label: `All Guests (${guests.length})` },
+            { key: 'rsvps',  label: `RSVP Responses (${rsvps.length})` },
+          ] as const).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '0.72rem',
+                fontWeight: activeTab === tab.key ? 600 : 400,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                background: activeTab === tab.key ? 'var(--color-forest-700)' : 'white',
+                color: activeTab === tab.key ? 'white' : '#888',
+                border: activeTab === tab.key ? '2px solid var(--color-forest-700)' : '2px solid #e8e4de',
+                borderRadius: '10px',
+                padding: '0.6rem 1.25rem',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* ── Add Guest ── */}
-        <section style={cardStyle}>
+        {activeTab === 'guests' && <section style={cardStyle}>
           <h2 style={sectionHeading}>Add Guest</h2>
           <form onSubmit={addGuest} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div style={{ flex: '2 1 160px' }}>
@@ -375,10 +405,10 @@ export function AdminDashboard() {
               {adding ? 'Adding…' : '+ Add'}
             </button>
           </form>
-        </section>
+        </section>}
 
         {/* ── Guest List ── */}
-        <section style={cardStyle}>
+        {activeTab === 'guests' && <section style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.1rem' }}>
             <h2 style={{ ...sectionHeading, margin: 0 }}>
               {filter === 'all' ? 'All Guests' : filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -481,10 +511,10 @@ export function AdminDashboard() {
               </table>
             </div>
           )}
-        </section>
+        </section>}
 
         {/* ── RSVP Responses ── */}
-        <section style={cardStyle}>
+        {activeTab === 'rsvps' && <section style={cardStyle}>
           <h2 style={sectionHeading}>RSVP Responses ({rsvps.length})</h2>
           {loading ? (
             <p style={emptyStyle}>Loading…</p>
@@ -563,7 +593,7 @@ export function AdminDashboard() {
               </table>
             </div>
           )}
-        </section>
+        </section>}
 
       </main>
 
