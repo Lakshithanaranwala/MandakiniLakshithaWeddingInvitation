@@ -37,6 +37,9 @@ export function AdminDashboard() {
   const [copied,  setCopied]  = useState<string | null>(null);
   const [filter,  setFilter]  = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
 
+  // Guest detail modal
+  const [selectedGuest, setSelectedGuest] = useState<GuestRow | null>(null);
+
   // RSVP detail modal
   const [selectedRsvp,    setSelectedRsvp]    = useState<RsvpRow | null>(null);
   const [editGuestCount,  setEditGuestCount]  = useState<number>(1);
@@ -365,7 +368,7 @@ export function AdminDashboard() {
                   {filteredGuests.map((g, i) => {
                     const rsvp = rsvpByGuest.get(g.id);
                     return (
-                      <tr key={g.id} style={{ background: i % 2 === 0 ? 'white' : '#faf8f4' }}>
+                      <tr key={g.id} onClick={() => setSelectedGuest(g)} style={{ background: i % 2 === 0 ? 'white' : '#faf8f4', cursor: 'pointer' }}>
                         <td style={tdStyle}><strong>{g.name}</strong></td>
                         <td style={{ ...tdStyle, color: '#888' }}>{g.phone}</td>
                         <td style={{ ...tdStyle, textAlign: 'center' }}>{g.seats}</td>
@@ -403,7 +406,7 @@ export function AdminDashboard() {
                             : <span style={{ color: '#ccc' }}>—</span>
                           }
                         </td>
-                        <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                        <td style={{ ...tdStyle, whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
                           <a
                             href={buildWhatsAppUrl(g)}
                             target="_blank"
@@ -518,6 +521,147 @@ export function AdminDashboard() {
         </section>
 
       </main>
+
+      {/* ── Guest Detail Modal ── */}
+      {selectedGuest && (() => {
+        const g = selectedGuest;
+        const rsvp = rsvpByGuest.get(g.id);
+        const viewInfo = viewsByGuest.get(g.id);
+        const link = `${SITE_URL}/?guest=${g.token}`;
+        return (
+          <div
+            onClick={() => setSelectedGuest(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 999,
+              padding: '1.5rem',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '18px',
+                padding: '2rem',
+                width: '100%',
+                maxWidth: '440px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.1rem', fontWeight: 700, color: '#222', margin: '0 0 0.35rem' }}>
+                    {g.name}
+                  </h2>
+                  {rsvp ? (
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '0.2rem 0.65rem',
+                      borderRadius: '999px',
+                      fontSize: '0.68rem',
+                      fontWeight: 500,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      background: rsvp.attendance === 'accept' ? '#e8f5e9' : '#fdecea',
+                      color:      rsvp.attendance === 'accept' ? '#2e7d32' : '#b71c1c',
+                    }}>
+                      {rsvp.attendance === 'accept' ? `Accepted · ${rsvp.guest_count ?? 1} seat${(rsvp.guest_count ?? 1) !== 1 ? 's' : ''}` : 'Declined'}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '0.72rem', color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Pending</span>
+                  )}
+                </div>
+                <button onClick={() => setSelectedGuest(null)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', color: '#bbb', cursor: 'pointer', lineHeight: 1, padding: '0 0.2rem' }}>×</button>
+              </div>
+
+              {/* Details grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <p style={modalLabel}>Phone</p>
+                  <p style={modalValue}>{g.phone}</p>
+                </div>
+                <div>
+                  <p style={modalLabel}>Allocated seats</p>
+                  <p style={modalValue}>{g.seats}</p>
+                </div>
+                <div>
+                  <p style={modalLabel}>Page views</p>
+                  <p style={{ ...modalValue, color: viewInfo ? '#1565c0' : '#bbb' }}>{viewInfo ? viewInfo.count : '0'}</p>
+                </div>
+                <div>
+                  <p style={modalLabel}>Last opened</p>
+                  <p style={{ ...modalValue, fontSize: '0.82rem', color: viewInfo ? '#555' : '#bbb' }}>
+                    {viewInfo
+                      ? new Date(viewInfo.lastSeen).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p style={modalLabel}>Added on</p>
+                  <p style={{ ...modalValue, fontSize: '0.82rem', color: '#555' }}>
+                    {new Date(g.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+                {rsvp?.message && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <p style={modalLabel}>Message</p>
+                    <p style={{ ...modalValue, color: '#555', lineHeight: 1.5, whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{rsvp.message}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Invitation link */}
+              <div style={{ background: '#f8f6f2', borderRadius: '10px', padding: '0.75rem 1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#888', margin: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {link}
+                </p>
+                <button
+                  onClick={() => copyLink(g.token)}
+                  style={{ ...copyBtn, background: copied === g.token ? '#e8f5e9' : '#e8e4de', color: copied === g.token ? '#2e7d32' : '#555', flexShrink: 0 }}
+                >
+                  {copied === g.token ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <a
+                  href={buildWhatsAppUrl(g)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ flex: 1, ...waBtn, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', padding: '0.75rem', fontSize: '0.78rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}
+                >
+                  WhatsApp
+                </a>
+                <button
+                  onClick={() => setSelectedGuest(null)}
+                  style={{
+                    flex: 1,
+                    fontFamily: 'var(--font-ui)',
+                    fontSize: '0.78rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    background: '#f0ece6',
+                    color: '#555',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '0.75rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── RSVP Detail Modal ── */}
       {selectedRsvp && (
