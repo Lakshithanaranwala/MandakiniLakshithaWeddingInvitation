@@ -136,7 +136,7 @@ export function Details() {
               Mandakini Club House
             </p>
             <p style={{ margin: 0, color: '#000' }}>
-              Divulapitiya, Sri Lanka
+              Divulapitiya, Sri Lanka.
             </p>
           </CardBody>
 
