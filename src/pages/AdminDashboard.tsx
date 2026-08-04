@@ -234,7 +234,7 @@ export function AdminDashboard() {
     .reduce((sum, r) => sum + (r.guest_count ?? 1), 0);
   const declinedSeats = rsvps
     .filter((r) => r.attendance === 'decline')
-    .reduce((sum, r) => sum + (guestById.get(r.guest_id)?.seats ?? 0), 0);
+    .reduce((sum, r) => sum + (r.guest_id ? (guestById.get(r.guest_id)?.seats ?? 0) : 0), 0);
 
   // Per-guest view stats
   const viewsByGuest = new Map<string, { count: number; lastSeen: string }>();
