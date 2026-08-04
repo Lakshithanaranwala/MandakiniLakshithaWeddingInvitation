@@ -232,6 +232,9 @@ export function AdminDashboard() {
   const confirmedSeats = rsvps
     .filter((r) => r.attendance === 'accept')
     .reduce((sum, r) => sum + (r.guest_count ?? 1), 0);
+  const declinedSeats = rsvps
+    .filter((r) => r.attendance === 'decline')
+    .reduce((sum, r) => sum + (guestById.get(r.guest_id)?.seats ?? 0), 0);
 
   // Per-guest view stats
   const viewsByGuest = new Map<string, { count: number; lastSeen: string }>();
@@ -313,7 +316,7 @@ export function AdminDashboard() {
         {/* ── Stats ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(6, 1fr)',
           gap: '0.75rem',
           marginBottom: '1.75rem',
         }}>
@@ -323,6 +326,7 @@ export function AdminDashboard() {
             { label: 'Accepted', value: accepted,        color: '#2e7d32',                key: 'accepted' },
             { label: 'Declined', value: declined,        color: '#b71c1c',                key: 'declined' },
             { label: 'Seats confirmed', value: confirmedSeats, color: '#1565c0',          key: null       },
+            { label: 'Seats declined', value: declinedSeats,  color: '#b71c1c',           key: null       },
           ] as const).map((s) => {
             const active = s.key !== null && filter === s.key;
             return (
