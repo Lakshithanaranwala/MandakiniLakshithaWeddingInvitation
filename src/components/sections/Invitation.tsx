@@ -244,7 +244,7 @@ export function Invitation() {
           }}>
             We would truly appreciate it if you could kindly RSVP by
             <br />
-            21st August, 2026
+            30th August, 2026
           </p>
         </GlassPanel>
       </Reveal>

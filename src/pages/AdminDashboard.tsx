@@ -18,7 +18,7 @@ function buildWhatsAppUrl(guest: GuestRow): string {
     `Your invitation:`,
     link,
     ``,
-    `We would truly appreciate it if you could kindly RSVP by 21st August, 2026 on the invitation `,
+    `We would truly appreciate it if you could kindly RSVP by 30th August, 2026 on the invitation `,
     ``,
     `With love,`,
     `Mandakini & Lakshitha`
